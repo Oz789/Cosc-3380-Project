@@ -4,10 +4,9 @@ import { Link } from "react-router-dom";
 
 
 
-const navBar = () => {
+const Navbar = () => {
   
   const [productsDropdown, setProductsDropdown] = useState(false);
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar sx={{ backgroundColor: "#fffbed", height: "65px", boxShadow: "brown", borderBottom: "2px solid #8B5A2B" }} position="static">
@@ -74,4 +73,4 @@ const navBar = () => {
   );
 };
 
-export default navBar;
+export default Navbar;

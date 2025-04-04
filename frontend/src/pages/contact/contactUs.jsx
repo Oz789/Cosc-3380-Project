@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import HomeNavBar from "../../components/homeNavBar";
+import UserNavbar from "../../components/navBar";
 import "./contact.css";
 
 const ContactP = () => {
@@ -33,7 +33,7 @@ const ContactP = () => {
 
   return (
     <>
-      <HomeNavBar />
+      <UserNavbar />
 
       <div className="bg-gray-100 min-h-screen flex flex-col items-center p-8">
         <h1 className="text-2xl font-semibold mb-8">Contact Us</h1>

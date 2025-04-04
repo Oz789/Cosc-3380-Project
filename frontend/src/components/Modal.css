@@ -2,12 +2,14 @@ body.active-modal {
     overflow-y: hidden;
 }
 
+
 .btn-modal {
     padding: 10px 20px;
     display: block;
     margin: 100px auto 0;
     font-size: 18px;
 }
+
 
 .modal, .overlay {
     width: 100vw;
@@ -18,13 +20,13 @@ body.active-modal {
     bottom: 0;
     position: fixed;
 
-
 }
 
 
 .overlay {
     background: rgba(49,49,49,0.8);
 }
+
 
 @media (min-width: 400px)
 {
@@ -37,14 +39,15 @@ body.active-modal {
     background: #f1f1f1;
     padding: 14px 28px;
     border-radius: 3px;
-     width: 1250px; 
+     width: 1250px;
     /* width: 60rem; */
-    
+   
     height: 600px;
     max-width: 2000px;
     min-width: 300px;
 }
 }
+
 
 .close-modal {
     position: absolute;
@@ -53,20 +56,26 @@ body.active-modal {
     padding: 5px 7px;
 }
 
+
 .modal-content .item-image {
+
 
     /* display:block; */
     width: 700px;
     /* margin:auto; */
 
+
     /* box-shadow: rgba(0, 0, 0, 0.07) -10px 10px 10px, rgba(0, 0, 0, 0.07) -10px 10px 10px; */
     box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 2px, rgba(0, 0, 0, 0.07) 0px 2px 4px, rgba(0, 0, 0, 0.07) 0px 4px 8px, rgba(0, 0, 0, 0.07) 0px 8px 16px, rgba(0, 0, 0, 0.07) 0px 16px 32px, rgba(0, 0, 0, 0.07) 0px 32px 64px;
 
+
 }
+
 
 .al {
     text-align: left;
 }
+
 
 .css-rizt0-MuiTypography-root .mod-title{
     /* font-size: 500px; */
@@ -77,13 +86,16 @@ body.active-modal {
     font-family: 'Roboto';
 }
 
+
 .tester{
     padding-top: -40px;
 }
 
+
 .success{
     color: grey;
 }
+
 
 .shifter{
     transform: translate(1835%,-865%);
