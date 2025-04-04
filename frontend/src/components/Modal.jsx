@@ -37,17 +37,6 @@ const theme = createTheme({
 const Modal = (props) => {
 
     const { id, name, price, img, brand, model, material, shape, gender, frameType, lensWidth, lensHeight, bridgeWidth, templeLength} = props.data;
-    //const modal = props.bool;
-    /*
-    
-    const [modal, setModal] = useState(false);
-
-    const toggleModal = () => {
-        setModal(!modal)
-    }
-    */
-    
-
 
     return(
         
@@ -55,15 +44,7 @@ const Modal = (props) => {
         <div className="modal">
             <div className="overlay"></div>
             <div className="modal-content">
-                {/* <Card sx={{maxWidth:10}}>
-                    <CardMedia
-                        component = "img"
-                        alt =  "A pair of glasses"
-                        width = "1"
-                        src = {`${img}`}
-                    />
 
-                </Card> */}
                 <Grid2 
                 container 
                 spacing={2}
@@ -96,27 +77,6 @@ const Modal = (props) => {
                     </Grid2>
 
 
-                    
-
-                {/* <p> einoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjfeinoewibfouigbfkjdshfjhsfjhskjfhjskdhfkjdshfjdsssssssskjsdhfkjsdhfkjsfksfhsdjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
-                    djsfkjdsfdsjfldsjfjdsfhklsdjfhdskjfhsdkjfhsdjkfhdskjfhdskjghdjghdkjfhdkfjhkfjhdkjfhjksfhjdksfhkjfkjfjghlskjhsdkjfhkjg
-                    dkjdsgjjsk;skldfjklsjf
-                </p> */}
-                {/* <h2>{name} aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</h2> */}
                 </Grid2>
 
                 <Grid2

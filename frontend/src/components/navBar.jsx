@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 const navBar = () => {
   
-  const [productsDropdown, setProductsDropdown] = useState(false);
+  //const [productsDropdown, setProductsDropdown] = useState(false);
 
   return (
     <Box sx={{ flexGrow: 1 }}>

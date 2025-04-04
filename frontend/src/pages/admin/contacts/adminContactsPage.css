@@ -1,0 +1,47 @@
+.admin-contact-card {
+    width: 400px;
+    height: 300px;
+    border: none;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fcfcf8dd;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .admin-contact-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .admin-contact-image {
+    height: 180px;
+    width: 100%;
+    object-fit: contain;
+    background-color: rgb(237, 237, 237);
+    padding: 10px;
+  }
+  
+  .admin-contact-details {
+    text-align: left;
+    padding: 12px;
+  }
+  
+  .admin-contact-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #000000;
+  }
+  
+  .admin-contact-subtitle {
+    font-size: 0.9rem;
+    margin-top: 4px;
+    color: #000;
+  }
+  
+  .admin-contact-price {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 8px;
+  }
+  
+  
