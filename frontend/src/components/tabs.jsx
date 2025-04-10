@@ -150,7 +150,7 @@ const TabsSerrated = (props) => {
             },
           }}
         >
-          {["Inbox", "Inventory", "Schedule"].map((label, index) => (
+          {["Inbox", "Inventory", "Schedule", " Billing"].map((label, index) => (
             <TabItem
               key={index}
               disableRipple

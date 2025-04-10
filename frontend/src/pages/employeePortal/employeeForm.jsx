@@ -248,7 +248,7 @@ const EmployeeForm = () =>
           <div className="e">
         <Grid2 container direction="row" spacing={2} >
         {/* Section Title */}
-        <Grid2  className="test">
+        <Grid2  className="test" marginRight={40}>
             <h2 className="section-title">Onboarding Information</h2>
         </Grid2>
 
@@ -293,7 +293,7 @@ const EmployeeForm = () =>
             </Grid2>
             
             <Grid2 className="big1">
-            <TextField
+            {/* <TextField
                 className="big2"
                 placeholder=" Tell us about yourself. This will serve as your employee page's bio."
                 multiline
@@ -302,17 +302,19 @@ const EmployeeForm = () =>
                 />
                 </Grid2>
 
-            <Grid2>
+            <Grid2> */}
             {/* Buttons */}
             <div className="button-group">
-              {isEditing ? (
+              {/* {isEditing ? (
                 <>
                   <button onClick={() => setIsEditing(false)} className="save-btn">Save</button>
                   <button onClick={() => setIsEditing(false)} className="cancel-btn">Cancel</button>
                 </>
               ) : (
-                <button onClick={() => setIsEditing(true)} className="edit-btn">Edit</button>
-              )}
+                <button onClick={() => setIsEditing(true)} className="edit-btn">Save</button>
+              )} */
+                <button className="save-btn">Save</button>
+              }
             </div>
             </Grid2>
             </Grid2>

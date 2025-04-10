@@ -1,44 +1,33 @@
 import React from "react";
 import UsernavBar from "../../components/navBar";
-import { Card, CardContent, Typography } from "@mui/material";
-import { Grid2 as Grid } from "@mui/material";
-import "./services.css";
+import { Typography } from "@mui/material";
+
 
 const services = [
-  { title: "Comprehensive Eye Exams", image: "/images/exams.jpg", description: "" },
-  { title: "Injury & Disease Treatment", image: "/images/injury.jpg", description: "" },
-  { title: "Children's Eye Care", image: "/images/kids.jpg" ,description: "" },
-  { title: "Contacts & Frames", image:"/images/frames copy.jpg", description: "" }
+  { title: "Comprehensive Eye Exams", image: "/images/exams.jpg" },
+  { title: "Injury & Disease Treatment", image: "/images/injury.jpg" },
+  { title: "Children's Eye Care", image: "/images/kids.jpg" },
+  { title: "Contacts & Frames", image: "/images/frames copy.jpg" },
 ];
 
 const Services = () => {
   return (
     <>
-    <UsernavBar/>
-    <div >
-      <Typography className="services-text" variant="h2">
-       
-      </Typography> 
-        <Grid container className="services-container" spacing={3} padding={3}>
-        {services.map((service, index) => (
-        <Grid item xs={12} sm={6} md={3} key={index} className="service-item">
-        <Card className="service-card">
-            <img src={service.image} alt={service.title}  className={`service-image ${service.title === "Contacts & Frames" ? "frames-offset" : ""}`}/>
-            < CardContent className="service-content">
-                <Typography variant="h6" className="service-title">
-                {service.title}
-                </Typography>
-                <Typography variant="body2" className="service-description">
-                {service.description}
-                </Typography>
-            </CardContent>
-        </Card>
+      <UsernavBar />
+      <div className="services-section">
+        <Typography className="services-title" variant="h3">
+          Our Services Offered
+        </Typography>
 
-
-        </Grid>
-      ))}
-    </Grid>
-    </div>
+        <div className="service-circles">
+          {services.map((service, index) => (
+            <div className="circle-service" key={index}>
+              <img src={service.image} alt={service.title} />
+              <div className="circle-label">{service.title}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 };

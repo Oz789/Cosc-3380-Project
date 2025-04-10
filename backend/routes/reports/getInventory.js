@@ -4,56 +4,58 @@ const db = require('../../db');
 
 router.get('/inventory', async (req, res) => {
   try {
-    const query = `SELECT  i.itemID,i.stockCount,
-       
-        f.name AS frameName, f.model AS frameModel, f.material AS frameMaterial,
-        f.brand AS frameBrand, f.price AS framePrice,
-
-        c.name AS contactName, c.model AS contactModel,
-        c.visionType, c.brand AS contactBrand,
-        c.price AS contactPrice
-
+ 
+    const [frames] = await db.promise().query(`
+      SELECT 
+        i.itemID,
+        i.stockCount,
+        f.name AS name,
+        f.model AS model,
+        f.brand AS brand,
+        f.material AS material,
+        f.price AS price
       FROM inventory i
-      LEFT JOIN frames f ON i.frameID = f.frameID
-      LEFT JOIN eyecontacts c ON i.contactID = c.contactID `;
+      JOIN frames f ON i.frameID = f.frameID
+    `);
 
-    const [results] = await db.promise().query(query);
+    const formattedFrames = frames.map(item => ({
+      itemID: item.itemID,
+      type: 'Frame',
+      name: item.name,
+      model: item.model,
+      brand: item.brand,
+      material: item.material,
+      price: parseFloat(item.price),
+      stockCount: item.stockCount
+    }));
 
-    const formattedResults = results.map(item => {
-      if (item.frameName) {
-        return {
-          itemID: item.itemID,
-          type: 'Frame',
-          name: item.frameName,
-          model: item.frameModel,
-          brand: item.frameBrand,
-          price: parseFloat(item.framePrice),
-          stockCount: item.stockCount
-        };
-      } else if (item.contactName) {
-        return {
-          itemID: item.itemID,
-          type: 'Contact',
-          name: item.contactName,
-          model: item.contactModel,
-          brand: item.contactBrand,
-          price: parseFloat(item.contactPrice),
-          stockCount: item.stockCount
-        };
-      } else {
-        return {
-          itemID: item.itemID,
-          type: 'Unknown',
-          name: 'Unknown',
-          model: '',
-          brand: '',
-          price: 0,
-          stockCount: item.stockCount
-        };
-      }
-    });
+    // Contacts
+    const [contacts] = await db.promise().query(`
+      SELECT 
+        i.itemID,
+        i.stockCount,
+        c.name AS name,
+        c.model AS model,
+        c.brand AS brand,
+        c.visionType AS visionType,
+        c.price AS price
+      FROM inventory i
+      JOIN eyecontacts c ON i.contactID = c.contactID
+    `);
 
-    res.json(formattedResults);
+    const formattedContacts = contacts.map(item => ({
+      itemID: item.itemID,
+      type: 'Contact',
+      name: item.name,
+      model: item.model,
+      brand: item.brand,
+      visionType: item.visionType,
+      price: parseFloat(item.price),
+      stockCount: item.stockCount
+    }));
+
+    const combined = [...formattedFrames, ...formattedContacts];
+    res.json(combined);
   } catch (err) {
     console.error("Failed to fetch inventory:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -61,4 +63,5 @@ router.get('/inventory', async (req, res) => {
 });
 
 module.exports = router;
+
 

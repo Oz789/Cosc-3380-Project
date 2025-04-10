@@ -125,8 +125,8 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
       <div className="form-group">
         <input
           type="date"
-          value={formData.dob}
-          onChange={(e) => handleInputChange('dob', e.target.value)}
+          value={formData.DOB}
+          onChange={(e) => handleInputChange('DOB', e.target.value)}
         />
       </div>
 

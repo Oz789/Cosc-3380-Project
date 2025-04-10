@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function AdditionalDetailsForm({ prevStep, values, handleChange }) {
+export default function AdditionalDetailsForm({ nextStep, prevStep, values, handleChange, setPatientId }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(values);
 
@@ -13,32 +13,19 @@ export default function AdditionalDetailsForm({ prevStep, values, handleChange }
 
   const handleSubmit = async () => {
     try {
-      console.log('Form values before submission:', {
-        sex: formData.sex,
-        sexType: typeof formData.sex,
-        fullFormData: formData
-      });
       const response = await fetch('http://localhost:5001/api/patients/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to submit form');
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit form');
-      }
-
-      console.log('Form submitted successfully:', data);
-      
-      // Redirect to patient profile
-      navigate('/log-in');
+      setPatientId(data.patientId); // Save for appointment
+      nextStep(); // 👈 advance to ScheduleAppointment
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert(error.message || 'Failed to submit form. Please try again.');
+      alert(error.message);
     }
   };
 

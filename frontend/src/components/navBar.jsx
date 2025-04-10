@@ -1,84 +1,55 @@
-import React from "react";
+// components/NavBarBasic.jsx
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext"; // Correct import
 
-const Navbar = () => {
-  const { cart } = useCart(); // Use the custom hook to access cart items
-
+const NavBar = () => {
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar sx={{ backgroundColor: "#fffbed", height: "65px", boxShadow: "brown", borderBottom: "2px solid #8B5A2B" }} position="static">
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Button className="nav-link" component={Link} to="/home">
-            <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight: "bold", color: "#3E2723" }}>
-              Home
-            </Typography>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          backgroundColor: "white",
+          borderBottom: "1px solid #dcdcdc",
+          height: "60px",
+          justifyContent: "center",
+        }}
+      >
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "30px",
+            fontFamily: "'Bell MT', serif",
+          }}
+        >
+          <Button component={Link} to="/home" sx={{ color: "#3E2723"}}>
+            Home
           </Button>
-
-          <Box sx={{ display: "flex", flex: 2, gap: "20px", justifyContent: "center", alignItems: "center" }}>
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}></Typography>
-
-            <Button className="nav-link" component={Link} to="/log-in">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight:"bold", color: "#3E2723" }}>
-                Patient's Center
-              </Typography>
-            </Button>
-
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}>|</Typography>
-
-            <Button className="nav-link" component={Link} to="/services">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight:"bold", color: "#3E2723" }}>
-                Services
-              </Typography>
-            </Button>
-
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}>|</Typography>
-
-            <Button className="nav-link" component={Link} to="/frames">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight:"bold", color: "#3E2723" }}>
-                Contacts & Frames
-              </Typography>
-            </Button>
-
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}>|</Typography>
-
-            <Button className="nav-link" component={Link} to="/about">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight: "bold", color: "#3E2723" }}>
-                About
-              </Typography>
-            </Button>
-
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}>|</Typography>
-
-            <Button className="nav-link" component={Link} to="/book-appointment">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight: "bold", color: "#3E2723" }}>
-                Book Appointment
-              </Typography>
-            </Button>
-
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}>|</Typography>
-
-            <Button className="nav-link" component={Link} to="/contact">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight:"bold", color: "#3E2723" }}>
-                Contact Us
-              </Typography>
-            </Button>
-
-            {/* Cart Button */}
-            <Typography sx={{ color: "#3E2723", fontSize: "25px" }}>|</Typography>
-
-            <Button className="nav-link" component={Link} to="/cart">
-              <Typography sx={{ fontFamily: "'Bell MT', serif", fontStyle: "italic", fontWeight: "bold", color: "#3E2723" }}>
-                Cart ({cart.length}) {/* Display number of items in cart */}
-              </Typography>
-            </Button>
-
-          </Box>
+          <Typography>|</Typography>
+          <Button component={Link} to="/log-in" sx={{ color: "#3E2723",}}>
+            Patient's Center
+          </Button>
+          <Typography>|</Typography>
+          <Button component={Link} to="/services" sx={{ color: "#3E2723",}}>
+            Services
+          </Button>
+          <Typography>|</Typography>
+          <Button component={Link} to="/frames" sx={{ color: "#3E2723", }}>
+            Contacts & Frames
+          </Button>
+          <Typography>|</Typography>
+          <Button component={Link} to="/about" sx={{ color: "#3E2723",}}>
+            About
+          </Button>
+          <Typography>|</Typography>
+          <Button component={Link} to="/contact" sx={{ color: "#3E2723",}}>
+            Contact Us
+          </Button>
         </Toolbar>
       </AppBar>
     </Box>
   );
 };
 
-export default Navbar;
+export default NavBar;

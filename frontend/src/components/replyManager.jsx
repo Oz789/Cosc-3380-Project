@@ -53,7 +53,7 @@ const ReplyManager = (props) => {
               <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="textbox w-full mb-4" placeholder="Phone" />
               <textarea name="message" value={formData.message} onChange={handleChange} className="textarea w-full mb-4" placeholder="Message" required></textarea>
 
-              <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">Send</button>
+              <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded blued">Send</button>
 
               {status && <p className="mt-4 text-green-600">{status}</p>}
             </form>

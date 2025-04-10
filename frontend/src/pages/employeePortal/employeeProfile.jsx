@@ -78,7 +78,7 @@ const EmployeeProfile = () => {
       
       sidebarContent={
         <div className="cont">
-          <img className="rounded" src="/Images/dog-secretary.webp" alt="A pic of John Doe, a white dog" width="300"></img>
+          <img className="rounded pfp" src="/Images/dog-secretary.webp" alt="A pic of John Doe, a white dog" width="300"></img>
           <h2 className="section-title">John Doe</h2>
           <h5 className="job"> Employee: Secretary</h5>
           <h5 ><b>About Me:</b></h5>
@@ -113,6 +113,16 @@ const EmployeeProfile = () => {
             )}
 
             {tabIn === 2 && (
+              
+              <InvManager
+            //bool={toggleMessager}
+            //pass={msgPasser}
+              />
+              
+              
+            )}
+
+            {tabIn === 3 && (
               
               <InvManager
             //bool={toggleMessager}

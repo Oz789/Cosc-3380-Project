@@ -7,27 +7,42 @@ const db = require('../db');
 router.get('/:id', async (req, res) => {
   try {
     const patientId = req.params.id;
-    
-    // Get patient basic info
-    const patientQuery = `
-      SELECT * FROM patient WHERE patientID = ?
-    `;
-    const [patientResult] = await db.promise().query(patientQuery, [patientId]);
-    
+
+    const [patientResult] = await db.promise().query(
+      'SELECT * FROM patient WHERE patientID = ?',
+      [patientId]
+    );
+
     if (patientResult.length === 0) {
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    // Get patient's medical form data
-    const medicalFormQuery = `
-      SELECT * FROM patientform WHERE patientID = ? ORDER BY visitDate DESC LIMIT 1
-    `;
-    const [medicalFormResult] = await db.promise().query(medicalFormQuery, [patientId]);
+    const [medicalFormResult] = await db.promise().query(
+      'SELECT * FROM patientform WHERE patientID = ? ORDER BY visitDate DESC LIMIT 1',
+      [patientId]
+    );
 
-    // Combine the data
+    const [appointmentsResult] = await db.promise().query(
+      `SELECT 
+         a.appointmentDate,
+         TIME_FORMAT(a.appointmentTime, '%H:%i') AS appointmentTime,
+         e.firstName AS doctorFirstName,
+         e.lastName AS doctorLastName,
+         s.serviceName
+       FROM appointments a
+       JOIN doctors d ON a.doctorId = d.doctorID
+       JOIN employee e ON d.employeeID = e.employeeID
+       JOIN services s ON a.service1ID = s.serviceID
+       WHERE a.patientId = ?
+       ORDER BY a.appointmentDate, a.appointmentTime`,
+      [patientId]
+    );
+    
+
     const patientData = {
       ...patientResult[0],
-      medicalForm: medicalFormResult[0] || {}
+      medicalForm: medicalFormResult[0] || {},
+      appointments: appointmentsResult || []
     };
 
     res.json(patientData);
@@ -36,6 +51,7 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch patient data' });
   }
 });
+
 
 // Create patient record
 router.post('/submit', async (req, res) => {
@@ -49,6 +65,7 @@ router.post('/submit', async (req, res) => {
     address,
     sex,
     occupation,
+    lastExamDate,
     usesCorrectiveLenses,
     usesContacts,
     LensesPrescription,
@@ -114,27 +131,49 @@ router.post('/submit', async (req, res) => {
     // Insert medical form data
     const medicalFormQuery = `
       INSERT INTO patientform (
-        patientID, visitDate, usesCorrectiveLenses, usesContacts, 
+        patientID, visitDate, lastExamDate, usesCorrectiveLenses, usesContacts, 
         LensesPrescription, ContactsPrescription, lastPrescriptionDate,
         healthConcerns, otherConcerns, conditions, otherConditions, 
         hadSurgery, surgeries, otherSurgeries, allergies, additionalDetails
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
+
+    // Get patient's appointments with doctor and service info
+    const appointmentsQuery = `
+      SELECT 
+        a.appointmentDate,
+        TIME_FORMAT(a.appointmentTime, '%H:%i') AS appointmentTime,
+        e.firstName AS doctorFirstName,
+        e.lastName AS doctorLastName,
+        s.serviceName
+        FROM appointments a
+        JOIN doctors d ON a.doctorId = d.doctorID
+        JOIN employee e ON d.employeeID = e.employeeID
+        JOIN services s ON a.service1ID = s.serviceID
+        WHERE a.patientId = ?
+        ORDER BY a.appointmentDate, a.appointmentTime
+`;
+
+
+    //const [appointmentsResult] = await db.promise().query(appointmentsQuery, [patientId]);
+
 
     const medicalFormValues = [
       patientId,
       new Date(),
+      lastExamDate,
       usesCorrectiveLenses,
       usesContacts,
       LensesPrescription,
       ContactsPrescription,
       lastPrescriptionDate,
-      (healthConcerns || []).join(','), // already correct!
+      (healthConcerns || []).join(','),
       otherConcerns,
-      (conditions || []).join(','), // fixed here
+      (conditions || []).join(','),
       otherConditions,
       hadSurgery,
-      (surgeries || []).join(','), // fixed here
+      (surgeries || []).join(','), 
       otherSurgeries,
       allergies,
       additionalDetails

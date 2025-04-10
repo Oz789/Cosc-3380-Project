@@ -12,8 +12,9 @@ import AdminDashboard from "./pages/admin/adminDashboard";
 import DoctorProfilePage from "./pages/doctor/doctorProfilePage";
 import ContactP from "./pages/contact/contactUs";
 import AboutP from "./pages/about/aboutPage";
-import EmployeeProfile from "./pages/employeePortal/employeeProfile";
+import EmployeeProfilePage from "./pages/employeePortal/employeeProfile2";
 import EmployeeForm from "./pages/employeePortal/employeeForm";
+
 import AdminFrames from "./pages/admin/frames/adminFrames";
 import AdminContacts from "./pages/admin/contacts/adminContactsPage";
 import AdminServices from "./pages/admin/services/adminServicesPage";
@@ -36,7 +37,7 @@ function App() {
           <Route path="/book-appointment" element={<MultiStepForm />} />
           <Route path="/services" element={<Services />} />
           <Route path="/userProfile/:patientID" element={<PatientProfile />} />
-          <Route path="/employeeProfile" element={<EmployeeProfile />} />
+          <Route path="/employeeProfile" element={<EmployeeProfilePage />} />
           <Route path="/frames" element={<UserFrames />} />
           <Route path="/log-in" element={<Login />} />
           <Route path="/admin-dashboard" element={<AdminProfile />} />

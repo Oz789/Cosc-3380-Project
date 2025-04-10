@@ -1,40 +1,171 @@
 .home-page {
-    height: 100vh; 
-    display: flex;
-    justify-content: flex-start;
-    align-items: center; 
-    padding-left: 38px;
-    
-}
+    position: relative;
+    min-height: 100vh;
+    background-blend-mode: overlay;
 
-.home-button { 
-    background-color: transparent !important;
-    border: 2px solid transparent !important;
-    color: rgb(0, 0, 0); 
-    font-size: 35px;
-    font-family: "Bell MT" !important;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out;
-    margin-bottom: 400px;
-}
-
-.home-button:hover {
-    transform: scale(1.1); 
-}
-
-.employee-portal {
+    padding: 3rem;
+    background-position: center;
+    background-size: cover;
+  }
+  
+  .home-page::before {
+    content: "";
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    font-size: 16px;
-    font-family: "Bell MT";
-}
-
-.employee-portal:hover {
-    text-decoration: underline;
+    inset: 0;
+    background: linear-gradient(to bottom, #e6fffacc 0%, #effffccc 100%);
+    z-index: 1;
+  }
+  
+  
+  .home-button{
+    z-index: 2;
+    position: relative;
+    display: block;
+    font-size: 36px;
+    margin: 3rem 0 0 5rem;
+    padding: 6px px;
+    border: none;
+    border-radius: 8px;
     background-color: transparent;
-}
+    color: #00796B;
+    font-family: "Bell MT", serif;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+    transition: all 0.3s ease;
+    width: fit-content;
+  }
+  
+  .home-button:hover,
+  .employee-portal:hover {
+    background-color: #00796B;
+    color: white;
+  }
+  
+
+
+  .team-profiles {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .team-member {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .team-member img {
+    width: 170px;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #c8ede0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+  
+  /* B&W faded */
+  .faded img {
+    filter: grayscale(100%);
+  }
+  
+  /* Highlighted one */
+  .highlight img {
+    filter: none;
+    transform: scale(1.1);
+    border-color: #00796B;
+  }
+  
+  /* Optional name */
+  .member-name {
+    margin-top: 1rem;
+    font-family: "Bell MT", serif;
+    font-style: italic;
+    font-weight: bold;
+    color: #00796B;
+    font-size: 1.2rem;
+  }
+
+  .services-section {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #effffccc 0%, #ffffff 20%);
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+  
+  .services-title {
+    font-family: "Bell MT", serif;
+    font-weight: bold;
+    font-style: italic;
+    color: #00796B;
+    margin-bottom: 3rem;
+  }
+  
+  .services-grid {
+    padding: 0 2rem;
+  }
+  
+  .service-card {
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+  
+  .service-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .service-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .service-title {
+    font-family: "Bell MT", serif;
+    font-weight: bold;
+    color: #3E2723;
+    padding-top: 1rem;
+  }
+  
+  .frames-offset {
+    object-position: top;
+  }
+  
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+  }
+  
+  #root {
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .service-card {
+    will-change: opacity, transform;
+  }
+
+  .typewriter-text {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-right: 4px;
+
+  }
+  
+  @keyframes blink {
+    50% {
+      border-color: transparent;
+    }
+  }
 
 
   

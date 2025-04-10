@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = process.env.JWT_SECRET;
 
+
+if (!SECRET_KEY) throw new Error("JWT_SECRET not defined!");
 
 router.get("/test", (req, res) => {
     res.send("login.js route file is active");
@@ -34,9 +38,13 @@ console.log("Plain input password:", password);
       const match = await bcrypt.compare(password, result[0].password);
       if (!match) return res.status(401).send("Invalid email or password");
   
-     
-      if (result[0].isAdmin){
-        return res.status(200).json({ role: "admin", user: result[0] });
+      if (result[0].isAdmin) {
+        const token = jwt.sign(
+          { id: result[0].employeeID, role: "admin" },
+          SECRET_KEY,
+          { expiresIn: "1h" }
+        );
+        return res.status(200).json({ token, role: "admin", user: result[0] });
       }
   
     
@@ -45,9 +53,21 @@ console.log("Plain input password:", password);
       db.query(dooctorSQL, [result[0].employeeID], (err, docResult) => {
         if (err) return res.status(500).send("Internal server error");
         if (docResult.length > 0) {
-          return res.status(200).json({ role: "doctor", user: result[0], doctorInfo: docResult[0] });
+          const token = jwt.sign(
+  { id: result[0].employeeID, role: "doctor" },
+  SECRET_KEY,
+  { expiresIn: "1h" }
+);
+return res.status(200).json({ token, role: "doctor", user: result[0], doctorInfo: docResult[0] });
+
         } else {
-          return res.status(200).json({ role: "employee", user: result[0] });
+          const token = jwt.sign(
+            { id: result[0].employeeID, role: "employee" },
+            SECRET_KEY,
+            { expiresIn: "1h" }
+          );
+          return res.status(200).json({ token, role: "employee", user: result[0] });
+          
         }
         });
    });
@@ -72,7 +92,13 @@ console.log("Plain input password:", password);
       const match = await bcrypt.compare(password, result[0].password);
       if (!match) return res.status(401).send("Invalid email or password");
   
-      res.status(200).json({ role: "patient", user: result[0] });
+      const token = jwt.sign(
+        { id: result[0].patientID, role: "patient" },
+        SECRET_KEY,
+        { expiresIn: "1h" }
+      );
+      res.status(200).json({ token, role: "patient", user: result[0] });
+      
     });
   });
   

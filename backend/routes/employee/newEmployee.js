@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 
 
 router.post('/add-employee', (req, res) => {
-  const { isAdmin, firstName, lastName, role, phone, email, password } = req.body;
+  const { isAdmin, firstName, lastName, role, phone, email, password, gender, address } = req.body;
 
   if (!firstName || !lastName || !role || !phone || !email || !password) {
     return res.status(400).json({ error: 'All fields are required.' });
@@ -18,10 +18,10 @@ router.post('/add-employee', (req, res) => {
       return res.status(500).json({ error: 'Server error while securing password.' });
     }
 
-  const sql = `INSERT INTO Employee (isAdmin, firstName, lastName, role, phone, email, password)
-    VALUES (?, ?, ?, ?, ?, ?, ?) `;
+  const sql = `INSERT INTO Employee (isAdmin, firstName, lastName, role, phone, email, password, gender, address)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) `;
 
-    db.query(sql, [isAdmin || 0, firstName, lastName, role, phone, email, hashedPassword],
+    db.query(sql, [isAdmin || 0, firstName, lastName, role, phone, email, hashedPassword, gender, address],
       (err, result) => {
     if (err) {
       console.error('Error inserting employee:', err);
