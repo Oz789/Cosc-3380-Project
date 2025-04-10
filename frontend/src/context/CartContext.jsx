@@ -1,3 +1,4 @@
+/*
 // CartContext.jsx
 import React, { createContext, useState, useContext } from "react";
 
@@ -14,8 +15,8 @@ export const CartProvider = ({ children }) => {
     setCart((prevCart) => [...prevCart, frame]);
   };
 
-  const removeFromCart = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  const removeFromCart = (frameID) => { // Changed parameter name to frameID
+    setCart((prevCart) => prevCart.filter((item) => item.frameID !== frameID)); // Changed item.id to item.frameID
   };
 
   // Calculate total price
@@ -23,6 +24,40 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, totalPrice }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+*/
+// CartContext.jsx
+import React, { createContext, useState, useContext } from "react";
+
+const CartContext = createContext();
+
+export const useCart = () => {
+  return useContext(CartContext);
+};
+
+export const CartProvider = ({ children }) => {
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (frame) => {
+    setCart((prevCart) => [...prevCart, frame]);
+  };
+
+  const removeFromCart = (frameID) => {
+    setCart((prevCart) => prevCart.filter((item) => item.frameID !== frameID));
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  // Calculate total price
+  const totalPrice = cart.reduce((total, item) => total + item.price, 0);
+
+  return (
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, totalPrice }}>
       {children}
     </CartContext.Provider>
   );

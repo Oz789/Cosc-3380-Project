@@ -1,11 +1,14 @@
 // PaymentForm.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import "./paymentForm.css";
+import { useCart } from "../../context/CartContext"; // Import the useCart hook
 
 function PaymentForm() {
-  const { state } = useLocation();  // Retrieve the frames data passed from CartPage
+  const { state } = useLocation();
   const navigate = useNavigate();
+  const { clearCart } = useCart(); // Access the clearCart function
 
   const [paymentInfo, setPaymentInfo] = useState({
     cardName: "",
@@ -21,46 +24,58 @@ function PaymentForm() {
     email: "",
   });
 
-  const [frameData, setFrameData] = useState(null);
+  const [frameData, setFrameData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (state && state.frames) {
-      setFrameData(state.frames);  // Set frames data from the state passed by CartPage
+    if (state?.frames?.length) {
+      setFrameData(state.frames);
       setLoading(false);
     } else {
-      setError("No frames in the cart.");
-      setLoading(false);
+      alert("Missing cart data. Please return to the frames page.");
+      navigate("/frames");
     }
-  }, [state]);
+  }, [state, navigate]);
 
   const handleChange = (e) => {
     setPaymentInfo({ ...paymentInfo, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (frameData && frameData.length > 0) {
-      console.log("Payment Info:", paymentInfo);
-      console.log("Frame Data:", frameData);
-      alert(`Payment processed successfully for ${frameData.map((frame) => frame.name).join(", ")}!`);
-    } else {
-      alert("Error: No frame data to process payment for.");
+
+    if (!frameData.length) {
+      alert("Missing frame data.");
+      return;
+    }
+
+    // Logging for debugging
+    console.log("Submitting checkout with items:", frameData);
+
+    try {
+      const response = await axios.post("http://localhost:5001/api/checkout", {
+        items: frameData.map((frame) => ({
+          frameID: frame.frameID || null,
+          contactID: frame.contactID || null,
+        })),
+        paymentInfo: paymentInfo, // Include payment information in the request if needed
+      });
+
+      alert(`Payment processed successfully! Total: $${response.data.totalPrice.toFixed(2)}`);
+
+      // Clear the cart after successful payment
+      clearCart();
+      console.log("Cart cleared after successful payment.");
+
+      navigate("/frames"); // Or navigate to an order confirmation page
+    } catch (err) {
+      console.error("Checkout error:", err);
+      const message = err.response?.data?.error || "An error occurred while processing your payment.";
+      alert(`Payment failed: ${message}`);
     }
   };
 
-  if (loading) {
-    return <div>Loading payment information...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!frameData || frameData.length === 0) {
-    return <div>No items found in the cart. Please return to the frames page and try again.</div>;
-  }
+  if (loading) return <div>Loading payment form...</div>;
 
   return (
     <div className="payment-container">

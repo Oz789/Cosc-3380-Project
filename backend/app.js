@@ -46,7 +46,7 @@ app.use('/api', getDoctorRoute);
 app.use('/api/patients', patientRoutes);
 app.use('/api/messages', messageRoutes);
 //app.use('/api/submit-form', formRoutes);
-app.use('/api/contact', createContacts);
+app.use('/', createContacts);
 app.use('/api', createFramesRoute);
 app.use('/api', getFramesRoute);
 app.use('/api', deleteFrameRoute);

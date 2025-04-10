@@ -22,12 +22,12 @@ import UserFrames from "./pages/Inventory/userFrames";
 import AdminProfilePage from "./pages/admin/adminProfile2";
 import InventoryReport from "./pages/admin/reports/inventoryReport";
 import PaymentForm from "./pages/billing/paymentForm";
-import CartPage from "./pages/CartPage";  // Import CartPage component
+import CartPage from "./pages/CartPage"; // Import CartPage component
 import Checkout from "./pages/billing/paymentForm";
 
 function App() {
   return (
-    <CartProvider>  {/* Wrap your app in CartProvider */}
+    <CartProvider> 
       <Router>
         <Routes>
           <Route path="/home" element={<Home />} />
@@ -49,7 +49,6 @@ function App() {
           <Route path="/admin-profile" element={<AdminProfilePage />} />
           <Route path="/inventory-report" element={<InventoryReport />} />
           <Route path="/payment" element={<PaymentForm />} />
-          {/* Add this route for cart */}
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
         </Routes>
