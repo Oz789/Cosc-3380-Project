@@ -63,6 +63,4 @@ export const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
-=======
 
->>>>>>> a3649b73bbb75ccbb05537f6830eefd1aa398971
