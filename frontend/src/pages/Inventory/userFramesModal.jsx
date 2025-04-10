@@ -8,6 +8,7 @@ import {
 import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 import { useCart } from "../../context/CartContext"; // Correct import path
 import '../admin/frames/adminFrames.css';
+import './userFramesModal.css';
 
 const UserFramesModal = ({ data, onClose }) => {
   const { name, price, img, brand, model, material, shape, frameType, lensWidth, lensHeight, bridgeWidth, templeLength } = data;
@@ -24,9 +25,7 @@ const UserFramesModal = ({ data, onClose }) => {
       <div className="overlay"></div>
       <div className="modal-content">
         <Grid container spacing={2} padding={2}>
-          <Grid item xs={12} sm={6}>
-            <img src={img} alt="Eyeglass" className="item-image" />
-          </Grid>
+         
 
           <Grid item xs={12} sm={6}>
             <Typography variant="h4">{name}</Typography>
@@ -41,23 +40,30 @@ const UserFramesModal = ({ data, onClose }) => {
             </Grid>
           </Grid>
 
+          <Grid item xs={12} md={6}>
+    <img
+      src={img || "/Images/default-frame.png"}
+      alt="Eyeglass"
+      style={{
+        width: "100%",
+        borderRadius: "10px",
+        boxShadow: "0 8px 18px rgba(0, 0, 0, 0.1)",
+      }}
+    />
+  </Grid>
           <Grid item xs={12}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Typography variant="h6">Dimensions</Typography>
-                <Typography><b>Lens Width:</b> {lensWidth}mm</Typography>
-                <Typography><b>Lens Height:</b> {lensHeight}mm</Typography>
-                <Typography><b>Bridge Width:</b> {bridgeWidth}mm</Typography>
-                <Typography><b>Temple Length:</b> {templeLength}mm</Typography>
+                <Typography><b>Lens Width:</b> {lensWidth}</Typography>
+                <Typography><b>Bridge Width:</b> {bridgeWidth}</Typography>
+                <Typography><b>Temple Length:</b> {templeLength}</Typography>
               </Grid>
-
               <Grid item xs={12} sm={6}>
                 <Typography variant="h6">Specifications</Typography>
                 <Typography><b>Brand:</b> {brand}</Typography>
                 <Typography><b>Model:</b> {model}</Typography>
                 <Typography><b>Material:</b> {material}</Typography>
-                <Typography><b>Shape:</b> {shape}</Typography>
-                <Typography><b>Frame Type:</b> {frameType}</Typography>
               </Grid>
             </Grid>
           </Grid>

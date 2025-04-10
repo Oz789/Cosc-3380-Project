@@ -6,8 +6,11 @@ const AboutP = () => {
   return (
     <>
       <UsernavBar />
+      <div className="about-animated-banner">
+  <h1 className="animated-about-title">ABOUT US</h1>
+  <div className="underline-slide"></div>
+</div>
       <div className="about-container">
-        <h1 className="about-title">About Our Eye Clinic</h1>
 
         <div className="about-flex">
           {/* Left Section */}

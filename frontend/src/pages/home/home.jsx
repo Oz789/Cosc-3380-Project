@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Grid } from "@mui/material";
 import "./home.css";
 
-const homeBackground = ""; 
+const homeBackground = "./images/home.jpg"; 
 
 
 const services = [

@@ -1,89 +1,93 @@
-/* Overall page layout */
 .contact-page {
-  background-color: #f8f9fa;
+  background: linear-gradient(to top, #ecfffb 10%, #edfffc 30%, #ffffff 60%);
   min-height: 100vh;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
+  padding: 3rem 2rem;
+  font-family: "Bell MT", serif;
 }
 
 .contact-title {
   text-align: center;
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  font-weight: bold;
+  font-size: 2.5rem;
+  font-style: italic;
+  color: #00796B;
+  margin-bottom: 2.5rem;
 }
 
 .contact-grid {
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
   justify-content: center;
-  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Shared styles for both boxes */
+/* Boxes on left and right */
 .contact-box {
-  background: white;
+  flex: 1;
+  min-width: 300px;
+  background-color: #ffffff;
   padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-  box-sizing: border-box;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
 .contact-box h2 {
-  font-size: 1.25rem;
+  color: #00796B;
+  font-style: italic;
   margin-bottom: 1rem;
-  font-weight: bold;
 }
 
 .contact-box p {
-  margin-bottom: 1rem;
-  line-height: 1.5;
+  color: #3E2723;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
-/* Form elements */
-.contact-box form input,
-.contact-box form textarea {
-  width: 100%;
+/* Form */
+.contact-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-box input,
+.contact-box textarea {
+  font-family: "Bell MT", serif;
+  font-style: italic;
   padding: 10px;
-  margin-bottom: 1rem;
+  border-radius: 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
   font-size: 1rem;
-}
-
-.contact-box form textarea {
   resize: vertical;
-  height: 120px;
+  background-color: #f8fffc;
 }
 
-.contact-box form button {
-  background-color: #007bff;
-  color: white;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 6px;
-  width: 100%;
+.contact-box textarea {
+  min-height: 100px;
+}
+
+.contact-box button {
+  font-family: "Bell MT", serif;
   font-size: 1rem;
+  font-style: italic;
+  font-weight: bold;
+  color: white;
+  background-color: #00796B;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
-.contact-box form button:hover {
-  background-color: #0056b3;
+.contact-box button:hover {
+  background-color: #005f56;
 }
 
 .status-message {
-  margin-top: 1rem;
-  color: green;
-  font-weight: bold;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .contact-grid {
-    flex-direction: column;
-    align-items: center;
-  }
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #00796B;
+  font-style: italic;
 }
