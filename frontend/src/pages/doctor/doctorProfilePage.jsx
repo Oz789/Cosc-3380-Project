@@ -21,6 +21,7 @@ const DoctorProfilePage = () => {
 
   useEffect(() => {
     fetch(`http://localhost:5001/api/doctors/${doctorID}/appointments`)
+
       .then((res) => res.json())
       .then(setAppointments)
       .catch((err) => console.error("Error fetching appointments:", err));

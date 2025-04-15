@@ -6,6 +6,7 @@ const db = require("./db");
 const createContacts = require('./routes/patient/createContacts');
 const employeeRoutes = require('./routes/employee/newEmployee');
 const loginRoutes = require('./login/login');
+const registerPatient = require("./login/register");
 const createDoctorRoute = require('./routes/doctor/createDoctor');
 const getDoctorRoute = require('./routes/doctor/getDoctor');
 const patientRoutes = require('./routes/patientRoutes');
@@ -26,10 +27,34 @@ const getEmployeeRoute = require('./routes/employee/getEmployee');
 const updateContactsRoute = require('./routes/admin/updateContacts');
 const updateServicesRoute = require('./routes/admin/updateServices');
 const getInventoryRoute = require('./routes/reports/getInventory');
-const appointmentRoutes = require('./routes/appointmentRoutes');
+const appointmentRoutes = require('./routes/getAppointments');
 const checkoutRoutes = require('./routes/checkoutRoutes');
 const authenticateToken = require('./middleware/auth');
 const updateEmployee = require('./routes/employee/updateEmployee');
+const getDoctorAppointments = require('./routes/getAppointments');
+const getAllAppointments = require('./routes/receptionist/getAllAppointments');
+const locationRoutes = require('./routes/doctor/locations'); 
+const scheduleRoutes = require('./routes/doctor/schedule');
+const scheduledappointmentRoutes = require('./routes/appointmentRoutes');
+const getClinicAppointments = require('./routes/receptionist/getClinicAppointments');
+const updateStatus = require("./routes/receptionist/updateStatus");
+const getNursePatient = require("./routes/nurse/nurseExam");
+const updateMedicalForm = require('./routes/nurse/updateNurseForm');
+const createExamReport = require('./routes/doctor/updateEyeExamForm');
+const createReferralRoute = require('./routes/doctor/referral');
+const endAppointmentRoute = require('./routes/doctor/endAppointment');
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -41,10 +66,10 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/api/protected", authenticateToken, (req, res) => {
-  res.json({
-    message: "Access granted to protected route ",
-    user: req.user
-  });
+    res.json({
+        message: "Access granted to protected route ",
+        user: req.user
+    });
 });
 
 app.use("/api/employees", employeeRoutes);
@@ -62,6 +87,7 @@ app.use('/api/doctor', createDoctorRoute);
 app.use('/api', getDoctorRoute);
 app.use('/api/patients', patientRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/patients', updateMedicalForm);
 //app.use('/api/submit-form', formRoutes);
 app.use('/', createContacts);
 app.use('/api', createFramesRoute);
@@ -73,6 +99,7 @@ app.use('/api', getContactsRoute);
 app.use('/api', updateContactsRoute);
 app.use('/api', deleteContactsRoute);
 app.use('/api', createServiceRoute);
+app.use("/api/nursePatient", getNursePatient);
 app.use('/api', getServicesRoute);
 app.use('/api', deleteServiceRoute);
 app.use('/api/employees', deleteEmployeeRoute);
@@ -80,6 +107,21 @@ app.use('/api', getEmployeeRoute);
 app.use('/api/employees', updateEmployee);
 app.use('/api', updateServicesRoute);
 app.use('/api', getInventoryRoute);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api', getDoctorAppointments);
+app.use('/api', getAllAppointments);
+app.use('/api/register-patient', registerPatient);
+app.use('/api/locations', locationRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/appointments', scheduledappointmentRoutes);
+app.use('/api/appointments', getClinicAppointments);
+app.use('/api/appointments', updateStatus);
+app.use('/api/examReports', createExamReport);
+app.use('/api/referrals', createReferralRoute);
+app.use('/api/appointments', endAppointmentRoute);
+
+
+
 
 
 

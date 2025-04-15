@@ -2,160 +2,275 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './form.css';
 
-const hours = [
-  '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-  '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM',
-  '4:00 PM', '5:00 PM'
-];
-
-const serviceNames = {
-  2: 'Eye Exam',
-  3: 'Lasik'
-};
-
-
-
-const getFormattedDate = (offset = 0) => {
-  const date = new Date();
-  date.setDate(date.getDate() + offset);
-  return date.toISOString().split('T')[0];
-};
-
 export default function ScheduleAppointment({ prevStep, patientId }) {
   const [appointments, setAppointments] = useState({});
-  const [selected, setSelected] = useState({ date: '', time: '' });
+  const [selected, setSelected] = useState({ date: '', time: '', doctorId: ''});
+  const [locations, setLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [doctorSchedules, setDoctorSchedules] = useState([]);
+  const navigate = useNavigate();
   const daysToShow = 7;
 
-  const navigate = useNavigate();
-
-  const fetchAppointments = async () => {
-    const res = await fetch('http://localhost:5001/api/appointments');
-    const data = await res.json();
-    const map = {};
-    data.forEach(({ date, time }) => {
-      if (!map[date]) map[date] = new Set();
-      map[date].add(time);
-    });
-    setAppointments(map);
-  };
-
-  const handleSelect = (date, time, doctorId) => {
-    const dayName = getDayName(date);
-    const service1ID = ['Monday', 'Wednesday', 'Friday'].includes(dayName) ? 4 : 6;
-    setSelected({ date, time, doctorId, service1ID });
-  };  
-
-  const doctorSchedule = {
-    'Monday': 2,    // Doctor A (eye exam)
-    'Wednesday': 2,
-    'Friday': 2,
-    'Tuesday': 3,   // Doctor B (Lasik)
-    'Thursday': 3
-  };
-
-  const getDayName = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' });
-  };
-
+  useEffect(() => {
+    console.log("Appointments state changed:", appointments);
+  }, [appointments]);
+  // ---------------- TIME HELPERS ----------------
   const convertTo24Hour = (time12h) => {
     const [time, modifier] = time12h.split(' ');
     let [hours, minutes] = time.split(':');
   
-    if (modifier === 'PM' && hours !== '12') {
-      hours = String(Number(hours) + 12);
-    } else if (modifier === 'AM' && hours === '12') {
-      hours = '00';
-    }
+    if (modifier === 'PM' && hours !== '12') hours = String(+hours + 12);
+    if (modifier === 'AM' && hours === '12') hours = '00';
   
-    return `${hours.padStart(2, '0')}:${minutes}:00`;
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:00`;
   };
+
+  const getFormattedDate = (offset = 0) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return date.toLocaleDateString('en-CA');
+  };
+
+  const getDayName = (dateStr) =>
+    new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' });
+
+  const generateTimeSlots = (start, end) => {
+    const slots = [];
+    let [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    while (sh < eh || (sh === eh && sm < em)) {
+      const time = new Date(0, 0, 0, sh, sm).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      slots.push(time);
+      sm += 60;
+      if (sm >= 60) {
+        sh++;
+        sm = 0;
+      }
+    }
+    return slots;
+  };
+
+  // ---------------- DATA FETCHING ----------------
+  const fetchLocations = async () => {
+    const res = await fetch('http://localhost:5001/api/locations');
+    const data = await res.json();
+    setLocations(data);
+  };
+
+  const fetchSchedules = async (locationID) => {
+    const res = await fetch(`http://localhost:5001/api/schedule/location/${locationID}`);
+    const data = await res.json();
+    setDoctorSchedules(data);
+  };
+
+  const fetchAppointments = async () => {
+    const res = await fetch(`http://localhost:5001/api/appointments?locationID=${selectedLocation}`);
+    const data = await res.json();
   
-  const handleConfirm = async () => {
-    const { date, time, doctorId, service1ID } = selected;
-    if (!date || !time || !doctorId  || !service1ID ) return;
+    console.log("📦 Raw API data:", data); // ← FULL object
   
-    const time24 = convertTo24Hour(time);
+    const map = {};
+    data.forEach(({ appointmentDate, appointmentTime }) => {
+      const dateStr = appointmentDate.substring(0, 10);
+      const timeStr = appointmentTime.trim().padStart(8, '0');
   
-    const res = await fetch('http://localhost:5001/api/appointments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        date,
-        time: time24,
-        patientId,
-        doctorId,
-        service1ID
-      }),
+      console.log(`Extracted date: ${dateStr}, time: ${timeStr}`); // ← Track parsed values
+  
+      if (!map[dateStr]) map[dateStr] = new Set();
+      map[dateStr].add(timeStr);
+      console.log(`Mapped DB date → ${appointmentDate} → ${dateStr} with time ${timeStr}`);
     });
   
-    if (res.ok) {
-      alert('Appointment scheduled!');
-      navigate(`/userProfile/${patientId}`);
-    }    
-     else {
-      alert('That time is no longer available.');
-    }
+    console.log("Final Appointments Before Set:", map);
+    setAppointments(map);
   };
   
   
 
+  // ---------------- EFFECTS ----------------
   useEffect(() => {
-    fetchAppointments();
+    fetchLocations();
   }, []);
 
-  return (
-    <div className="form-container">
-      <h2>Schedule Appointment</h2>
-      <div className="grid-container" style={{ display: 'grid', gridTemplateColumns: `repeat(${daysToShow}, 1fr)` }}>
-        {[...Array(daysToShow)].map((_, idx) => {
-          const date = getFormattedDate(idx);
-          const dayName = getDayName(date);
-          const doctorId = doctorSchedule[dayName];
+  useEffect(() => {
+    if (selectedLocation) {
+      fetchSchedules(selectedLocation);
+      fetchAppointments();
+    }
+  }, [selectedLocation]);
 
-          if (!doctorId) return null; // skip weekends or unscheduled days
+  // ---------------- ACTIONS ----------------
+  const handleSelect = (date, time, doctorId) => {
+    setSelected({ date, time, doctorId});
+  };
+
+  const handleConfirm = async () => {
+    const { date, time, doctorId} = selected;
+    if (!date || !time || !doctorId) {
+      console.log("Missing fields:", selected);
+      return;
+    }
+  
+    const time24 = convertTo24Hour(time);
+    console.log("Submitting appointment:", { date, time: time24, doctorId, patientId });
+  
+    try {
+      const res = await fetch('http://localhost:5001/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date,
+          time: time24,
+          patientId,
+          doctorId,
+          service1ID: 4
+        }),
+      });
+  
+      const text = await res.text(); // Show raw response in console
+      console.log("Server response:", res.status, text);
+  
+      if (res.ok) {
+        alert('Appointment scheduled!');
+        navigate(`/userProfile/${patientId}`);
+      } else {
+        alert('That time is no longer available or server error.');
+      }
+    } catch (err) {
+      console.error("Fetch failed:", err);
+      alert("Something went wrong");
+    }
+  };
+  
+
+  // ---------------- DISPLAY ----------------
+  const scheduleMap = {};
+  doctorSchedules.forEach((entry) => {
+    if (!scheduleMap[entry.dayOfWeek]) scheduleMap[entry.dayOfWeek] = [];
+    scheduleMap[entry.dayOfWeek].push(entry);
+  });
+
+  return (
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-box">
+          <h2 className="login-title">Schedule Appointment</h2>
+
+          {/* SELECT LOCATION */}
+          <div className="input-row">
+            <p>Select Location:</p>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+            >
+              <option value="">Select Location</option>
+              {locations.map((loc) => (
+                <option key={loc.locationID} value={loc.locationID}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* TIME SLOT PICKER */}
+          {selectedLocation && (
+            <div className="appointment-grid" style={{ marginTop: '2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${daysToShow}, 1fr)` }}>
+              
+              {(() => {
+        const baseDate = new Date();
+baseDate.setHours(12); 
+
+        return [...Array(daysToShow)].map((_, idx) => {
+          const dateObj = new Date(baseDate);
+          dateObj.setDate(baseDate.getDate() + idx);
+
+          const dateStr = dateObj.toISOString().split('T')[0];
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+          const readableDate = dateObj.toDateString();
+
+          const schedules = scheduleMap[dayName] || [];
 
           return (
-            <div key={date}>
-              <h3>
+            <div key={dateStr}>
+              <h4 style={{ fontWeight: 'bold', color: '#00796B' }}>
                 {dayName}<br />
-                {new Date(date).toDateString()}<br />
-                <small style={{ color: '#555', fontSize: '0.9em' }}>
-                  Service: {serviceNames[doctorId]}
-                </small>
-              </h3>
-              {hours.map(hour => {
-                const isBooked = appointments[date]?.has(hour);
-                const isSelected = selected.date === date && selected.time === hour;
+                {readableDate}
+              </h4>
+
+              {schedules.map((sched) => {
+                const slots = generateTimeSlots(sched.startTime, sched.endTime);
+
                 return (
-                  <button
-                    key={hour}
-                    onClick={() => handleSelect(date, hour, doctorId)}
-                    disabled={isBooked}
-                    style={{
-                      backgroundColor: isSelected ? '#28a745' : isBooked ? '#ccc' : '#007bff',
-                      color: '#fff',
-                      margin: '5px',
-                      padding: '8px',
-                      width: '100%',
-                      borderRadius: '5px',
-                      cursor: isBooked ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {hour}
-                  </button>
+                  <div key={`${sched.doctorID}-${sched.scheduleID}`} style={{ marginBottom: '1rem' }}>
+                    <small style={{ color: '#444', fontStyle: 'italic' }}>
+                      {sched.doctorName} – {sched.serviceName}
+                    </small>
+
+                    {slots.map((hour) => {
+                      const hour24 = convertTo24Hour(hour);
+                      const isBooked = appointments[dateStr]?.has(hour24);
+                      const isSelected =
+                        selected.date === dateStr &&
+                        convertTo24Hour(selected.time) === hour24 &&
+                        selected.doctorId === sched.doctorID;
+
+                      return (
+                        <button
+                        key={hour}
+                        onClick={() =>
+                          handleSelect(dateStr, hour, sched.doctorID)
+                        }
+                        disabled={isBooked}
+                        style={{
+                          backgroundColor: isSelected
+                            ? '#28a745'
+                            : isBooked
+                            ? '#f0f0f0'
+                            : '#ffffff',
+                          color: isBooked ? '#aaa' : '#00796B',
+                          border: isSelected
+                            ? '2px solid #28a745'
+                            : '2px solid #00796B',
+                          margin: '4px',
+                          padding: '6px',
+                          width: '100%',
+                          borderRadius: '6px',
+                          cursor: isBooked ? 'not-allowed' : 'pointer',
+                          fontSize: '0.85rem',
+                          fontWeight: 'bold',
+                          opacity: isBooked ? 0.5 : 1,
+                          transition: '0.2s ease',
+                        }}
+                      >
+                        {hour}
+                      </button>
+                      
+                      );
+                    })}
+                  </div>
                 );
               })}
             </div>
           );
-        })}
-      </div>
+        });
+      })()}
 
-      <div className="nav-buttons">
-        <button onClick={prevStep}>Back</button>
-        <button onClick={handleConfirm} disabled={!selected.date || !selected.time}>
-          Confirm Appointment
-        </button>
+    </div>
+          {/* CONFIRM BUTTON */}
+          <div className="nav-buttons" style={{ marginTop: '2rem' }}>
+            <button onClick={prevStep}>Back</button>
+            <button type="button" onClick={handleConfirm}>Confirm Appointment</button>
+          </div>
+  </div>
+)}
+
+        </div>
       </div>
+      <button onClick={() => alert("Clicked!")}>Test Click</button>
     </div>
   );
 }

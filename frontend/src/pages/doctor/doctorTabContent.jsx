@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-
+import DoctorAppointments from "./doctorAppointments";
+import PatientFormViewer from "../patientPortal/patientFormViewer";
+import EmployeeDetails from "../employeePortal/employeeDetails";
+import CheckedInAppointments from "../employeePortal/checkedIn";
+import DocActiveAppointments from "./doctorActiveAppointments";
+import ReceptionistAppointments from "../employeePortal/receptionistAppointments";
+import ClinicAppointments from "../employeePortal/clinicAppointments";
 
 // import other tab content 
 
@@ -18,23 +24,21 @@ const DoctorTabContent = ({ activeTab,doctor }) => {
   switch (activeTab) {
   
     case 0:
-        return (
-            <div style={{ padding: 16 }}>
-            <h3>Doctor Overview</h3>
-            <p><strong>Name:</strong> {doctor.firstName} {doctor.lastName}</p>
-            <p><strong>Email:</strong> {doctor.email}</p>
-            <p><strong>Phone:</strong> {doctor.phone}</p>
-            <p><strong>Specialization:</strong> {doctor.specialization}</p>
-          </div>
-        )
-    case 1:
-      return;
+        return <EmployeeDetails/>
+        
+          case 1:
+            return (
+              <div className="w-full flex flex-row justify-center">
+                <DoctorAppointments />
+              </div>
+            );
     case 2:
-      return;
+      return <DocActiveAppointments/>;
+
     case 3:
-      return;
+      return <ReceptionistAppointments/>;
     case 4:
-   return ;
+   return <ClinicAppointments/>;
     default:
       return null;
   }

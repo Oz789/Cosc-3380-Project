@@ -1,13 +1,10 @@
 import React from "react";
 import { Tabs, Tab, Box } from "@mui/material";
-//import PatientDataForm from "./patientsDataForm";
 
-const tabLabels = ["Profile", "Appointments", "Active Appointments", "Inbox", "checking"]
+const tabLabels = ["Profile", "Upcomming Appointments","Active Appointments", "Inbox"]; // "Dashboard", "Inbox", "Services", "Frames", "Eye Contacts", "Staff", "Reports"
 
-const DoctorTabs = ({ activeTab, setActiveTab }) => {
+const EmpTabs = ({ activeTab, setActiveTab }) => {
   const handleChange = (e, newVal) => setActiveTab(newVal);
-
-
 
   return (
     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -20,4 +17,4 @@ const DoctorTabs = ({ activeTab, setActiveTab }) => {
   );
 };
 
-export default DoctorTabs;
+export default EmpTabs;

@@ -5,9 +5,25 @@ const db = require('../db');
 
 // Get all booked appointments
 router.get('/', async (req, res) => {
-  const [rows] = await db.promise().query('SELECT appointmentDate, appointmentTime FROM appointments');
-  res.json(rows);
+  const locationID = req.query.locationID;
+
+  try {
+    let sql = 'SELECT appointmentDate, appointmentTime FROM appointments';
+    let params = [];
+
+    if (locationID) {
+      sql += ' WHERE locationID = ?';
+      params.push(locationID);
+    }
+
+    const [rows] = await db.promise().query(sql, params);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching appointments:", err);
+    res.status(500).json({ error: 'Failed to fetch appointments' });
+  }
 });
+
 
 // Book a new appointment
 router.post('/', async (req, res) => {

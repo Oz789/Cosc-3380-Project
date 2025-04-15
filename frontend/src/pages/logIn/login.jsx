@@ -10,7 +10,8 @@ const Login = () => {
 
   const handleLogin = async () => {
     console.log("Sending login for:", email, password);
-  
+    localStorage.clear();
+
     try {
       const res = await fetch("http://localhost:5001/api/login/employee", {
         method: "POST",
@@ -24,18 +25,26 @@ const Login = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userRole", data.role);
         localStorage.setItem("userID", data.user.employeeID);
+        localStorage.setItem("userLocation", data.user.locationID);
   
         if (data.role === "admin") {
-          return navigate("/admin-dashboard");
+          return navigate(`/adminProfile/${data.user.employeeID}`);
         } else if (data.role === "doctor") {
           localStorage.setItem("doctorID", data.doctorInfo.doctorID);
+          console.log("DOCTOR INFO:", data.doctorInfo);
+
           return navigate(`/doctorProfile/${data.doctorInfo.doctorID}`);
-        } else if (data.role === "employee") {
-          return navigate("/employeeProfile");
+        } if (data.role === "employee") {
+          if (data.user.role === "Nurse") {
+            localStorage.setItem("userRole", "nurse"); 
+            return navigate(`/nurseProfile/${data.user.employeeID}`);
+          } else {
+            localStorage.setItem("userRole", "Receptionist");
+            return navigate(`/employeeProfile/${data.user.employeeID}`);
+          }
         }
       }
-  
-      // Try patient login if employee fails
+      
       const resPatient = await fetch("http://localhost:5001/api/login/patient", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,7 +54,6 @@ const Login = () => {
       if (resPatient.ok) {
         const data = await resPatient.json();
   
-
         localStorage.setItem("token", data.token);
         localStorage.setItem("userRole", data.role);
         localStorage.setItem("userID", data.user.patientID);

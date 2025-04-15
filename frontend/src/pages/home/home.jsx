@@ -5,6 +5,7 @@ import { Card, CardContent, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { Grid } from "@mui/material";
 import "./home.css";
+import NavBar from "../../components/cartNavBar";
 
 const homeBackground = "./images/home.jpg"; 
 

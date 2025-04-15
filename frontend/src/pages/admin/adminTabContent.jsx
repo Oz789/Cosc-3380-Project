@@ -6,6 +6,7 @@ import AdminContactsTab from "./contacts/adminContactsTab";
 import AdminServicesTab from "./services/adminServicesTab";
 import MsgManager from "../../components/msgManager";
 import AdminReportsPage from "./reports/adminReportsPage";
+import EmployeeDetails from "../employeePortal/employeeDetails";
 
 const AdminTabContent = ({ activeTab }) => {
 
@@ -21,6 +22,8 @@ const AdminTabContent = ({ activeTab }) => {
   }
   switch (activeTab) {
   
+    case 0:
+      return <EmployeeDetails/>
     case 1:
       return <MsgManager
         bool={toggleMessager}

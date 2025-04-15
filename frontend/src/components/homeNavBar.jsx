@@ -1,6 +1,7 @@
 import React, {useState, useEffect}from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
+import ProfileDropdown from "./profileDropdown";
 
 const HomeNavBar = () => {
 
@@ -72,11 +73,16 @@ const HomeNavBar = () => {
             About
           </Button>
           <Typography>|</Typography>
-          <Button component={Link} to="/contact" sx={{ color: "#3E2723" }}>
+          <Button component={Link} to="/cart" sx={{ color: "#3E2723" }}>
             Contact Us
           </Button>
         </Box>
-      </Box>
+        {/* Right side - icons */}
+  <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+    <ProfileDropdown />
+  </Box>
+</Box>
+
     </>
   );
 };

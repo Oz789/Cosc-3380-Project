@@ -1,0 +1,23 @@
+/* employeeDetails.css */
+
+.employee-details-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 16px;
+    background-color: #ffffffcc;
+    box-shadow: 0 8px 24px rgba(0, 121, 107, 0.2);
+  }
+  
+  .employee-details-title {
+    font-family: "Bell MT", serif;
+    font-weight: bold;
+    color: #00796B;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .employee-text-field {
+    background-color: white;
+    border-radius: 8px;
+  }
