@@ -113,7 +113,7 @@ const PatientProfile = () => {
 
   return (
     <ProfileTemplate
-      /* Left Sidebar (Patient Information) */
+      
       sidebarContent={
         <div>
           <h2 className="section-title">Patient Information</h2>
@@ -141,7 +141,7 @@ const PatientProfile = () => {
         </div>
       }
 
-      /* Center Section (Medical Form Data) */
+      
       mainContent={
         <div>
           <h2 className="section-title">Medical Form Data</h2>
@@ -182,7 +182,7 @@ const PatientProfile = () => {
           <h3 className="subsection-title">Additional Details</h3>
           <textarea name="additionalDetails" value={patientData.additionalDetails || ""} onChange={handleChange} className="textarea-field" readOnly={!isEditing}></textarea>
 
-          {/* Buttons */}
+          
           <div className="button-group">
             {isEditing ? (
               <>
@@ -233,12 +233,3 @@ const PatientProfile = () => {
 };
 
 export default PatientProfile;
-
-
-
-
-
-
-
-
-
