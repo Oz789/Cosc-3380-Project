@@ -29,7 +29,7 @@ const [editedFrame, setEditedFrame] = useState({ ...data, stockCount: data.stock
   const handleEditSubmit = async () => {
     try {
       await axios.patch(`http://localhost:5001/api/frames/${editedFrame.frameID}`, editedFrame);
-      onEdit(); 
+      onEdit(editedFrame); 
       onClose(); 
     } catch (err) {
       console.error("Failed to update frame:", err);

@@ -29,13 +29,13 @@ const AdminTabContent = ({ activeTab }) => {
         bool={toggleMessager}
         pass={msgPasser}/>
     case 2:
-      return <AdminServicesTab/>
+      return <AdminFramesTab/>;
     case 3:
-      return <AdminFramesTab/>
-    case 4:
       return <AdminContactsTab/>
-    case 5:
+    case 4:
       return <ManageStaffTab/>
+    case 5:
+      return <AdminReportsPage/>
     case 6:
       
       return (

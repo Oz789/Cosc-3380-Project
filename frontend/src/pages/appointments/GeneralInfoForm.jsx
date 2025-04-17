@@ -161,8 +161,8 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
   };
 
   const formatEmail = (value) => {
-    // Convert to lowercase and remove any spaces
-    return value.toLowerCase().trim();
+    // Remove any spaces but keep case
+    return value.trim();
   };
 
   const handleEmailChange = (e) => {

@@ -91,25 +91,35 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
   };
 
   const fetchAppointments = async () => {
-    const res = await fetch(`http://localhost:5001/api/appointments?locationID=${selectedLocation}`);
-    const data = await res.json();
-  
-    console.log("📦 Raw API data:", data);
-  
-    const map = {};
-    data.forEach(({ appointmentDate, appointmentTime }) => {
-      const dateStr = appointmentDate.substring(0, 10);
-      const timeStr = appointmentTime.trim().padStart(8, '0');
-  
-      console.log(`Extracted date: ${dateStr}, time: ${timeStr}`);
-  
-      if (!map[dateStr]) map[dateStr] = new Set();
-      map[dateStr].add(timeStr);
-      console.log(`Mapped DB date → ${appointmentDate} → ${dateStr} with time ${timeStr}`);
-    });
-  
-    console.log("Final Appointments Before Set:", map);
-    setAppointments(map);
+    try {
+      const res = await fetch(`http://localhost:5001/api/appointments?locationID=${selectedLocation}`);
+      const data = await res.json();
+    
+      console.log("📦 Raw API data:", data);
+    
+      if (!Array.isArray(data)) {
+        console.error("Expected array but got:", data);
+        return;
+      }
+    
+      const map = {};
+      data.forEach(({ appointmentDate, appointmentTime }) => {
+        const dateStr = appointmentDate.substring(0, 10);
+        const timeStr = appointmentTime.trim().padStart(8, '0');
+    
+        console.log(`Extracted date: ${dateStr}, time: ${timeStr}`);
+    
+        if (!map[dateStr]) map[dateStr] = new Set();
+        map[dateStr].add(timeStr);
+        console.log(`Mapped DB date → ${appointmentDate} → ${dateStr} with time ${timeStr}`);
+      });
+    
+      console.log("Final Appointments Before Set:", map);
+      setAppointments(map);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+      setAppointments({});
+    }
   };
 
   useEffect(() => {
@@ -135,18 +145,30 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
     }
   
     const time24 = convertTo24Hour(time);
-    console.log("Submitting appointment:", { date, time: time24, doctorId, patientId, locationID: selectedLocation });
+    const parsedService1ID = parseInt(selectedServiceType);
+    
+    // Format date to YYYY-MM-DD
+    const formattedDate = new Date(date).toISOString().split('T')[0];
+    
+    console.log("Submitting appointment:", { 
+      date: formattedDate, 
+      time: time24, 
+      doctorId, 
+      patientId, 
+      service1ID: parsedService1ID, 
+      locationID: selectedLocation 
+    });
   
     try {
       const res = await fetch('http://localhost:5001/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          date,
+          date: formattedDate,
           time: time24,
           patientId,
           doctorId,
-          service1ID: selectedServiceType,
+          service1ID: parsedService1ID,
           locationID: selectedLocation
         }),
       });
@@ -225,8 +247,8 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
               required
             >
               <option value="">Select Service Type</option>
-              <option value="eyeExam">Eye Exam</option>
-              <option value="diseaseTreatment">Disease and Eye Treatment</option>
+              <option value="4">Eye Exam</option>
+              <option value="5">Disease and Eye Treatment</option>
             </select>
           </div>
         )}

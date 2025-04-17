@@ -6,9 +6,20 @@ const db = require('../db');
 router.get('/', async (req, res) => {
   try {
     console.log('Fetching all insurance providers...');
-    const [results] = await db.promise().query('SELECT * FROM insurance');
-    console.log('Insurance providers found:', results);
-    res.json(results);
+    const connection = await db.getConnection();
+    try {
+      const [results] = await connection.query('SELECT * FROM insurance');
+      console.log('Insurance providers found:', results);
+      
+      if (!results || results.length === 0) {
+        console.log('No insurance providers found in database');
+        return res.status(404).json({ error: 'No insurance providers found' });
+      }
+      
+      res.json(results);
+    } finally {
+      connection.release();
+    }
   } catch (err) {
     console.error('Error fetching insurance providers:', err);
     res.status(500).json({ error: 'Failed to fetch insurance providers' });

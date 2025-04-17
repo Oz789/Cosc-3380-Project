@@ -19,7 +19,7 @@ import AdminPatients from "./pages/admin/AdminPatients";
 import AdminSettings from "./pages/admin/AdminSettings";
 import PatientDashboard from "./pages/patient/PatientDashboard";
 import PatientAppointments from "./pages/patient/PatientAppointments";
-import PatientProfile from "./pages/patient/PatientProfile";
+import PatientProfile from "./pages/patientPortal/patientProfile";
 import PatientSettings from "./pages/patient/PatientSettings";
 import ScheduleAppointment from "./pages/patient/ScheduleAppointment";
 import StaffDashboard from "./pages/staff/StaffDashboard";
@@ -27,6 +27,7 @@ import StaffAppointments from "./pages/staff/StaffAppointments";
 import StaffPatients from "./pages/staff/StaffPatients";
 import StaffSettings from "./pages/staff/StaffSettings";
 import NotFound from "./pages/NotFound";
+import EditPatientProfile from './pages/patientPortal/editPatientProfile';
 import "./App.css";
 
 function App() {
@@ -53,7 +54,8 @@ function App() {
         <Route path="/admin-settings" element={<AdminSettings />} />
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/patient-appointments" element={<PatientAppointments />} />
-        <Route path="/patient-profile" element={<PatientProfile />} />
+        <Route path="/patient-profile/:patientID/edit" element={<EditPatientProfile />} />
+        <Route path="/patient-profile/:patientID" element={<PatientProfile />} />
         <Route path="/patient-settings" element={<PatientSettings />} />
         <Route path="/schedule-appointment" element={<ScheduleAppointment />} />
         <Route path="/staff-dashboard" element={<StaffDashboard />} />

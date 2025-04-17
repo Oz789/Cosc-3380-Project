@@ -5,32 +5,67 @@ const db = require('../db');
 
 // Get all booked appointments
 router.get('/', async (req, res) => {
-  const locationID = req.query.locationID;
+  const { locationID, date } = req.query;
 
   try {
-    let sql = 'SELECT appointmentDate, appointmentTime FROM appointments';
-    let params = [];
+    const connection = await db.getConnection();
+    try {
+      let sql = `
+        SELECT 
+          a.appointmentNumber,
+          a.appointmentDate,
+          a.appointmentTime,
+          a.status,
+          a.doctorID,
+          a.patientID,
+          p.firstName AS patientFirstName,
+          p.lastName AS patientLastName,
+          e.firstName AS doctorFirstName,
+          e.lastName AS doctorLastName,
+          s.startTime,
+          s.endTime,
+          s.dayOfWeek
+        FROM appointments a
+        JOIN patient p ON a.patientID = p.patientID
+        JOIN doctors d ON a.doctorID = d.doctorID
+        JOIN employee e ON d.employeeID = e.employeeID
+        JOIN doctorschedule s ON d.doctorID = s.doctorID
+      `;
+      let params = [];
 
-    if (locationID) {
-      sql += ' WHERE locationID = ?';
-      params.push(locationID);
+      if (locationID) {
+        sql += ' WHERE a.locationID = ?';
+        params.push(locationID);
+      }
+
+      if (date) {
+        sql += locationID ? ' AND' : ' WHERE';
+        sql += ' a.appointmentDate = ?';
+        params.push(date);
+      }
+
+      sql += ' ORDER BY a.appointmentDate, a.appointmentTime';
+
+      const [rows] = await connection.query(sql, params);
+      // Ensure we always return an array, even if empty
+      res.json(rows || []);
+    } finally {
+      connection.release();
     }
-
-    const [rows] = await db.promise().query(sql, params);
-    res.json(rows);
   } catch (err) {
     console.error("Error fetching appointments:", err);
-    res.status(500).json({ error: 'Failed to fetch appointments' });
+    res.status(500).json({ 
+      error: 'Failed to fetch appointments',
+      details: err.message 
+    });
   }
 });
-
 
 // Book a new appointment
 router.post('/', async (req, res) => {
   const { date, time, patientId, doctorId, service1ID, locationID } = req.body;
 
   console.log("Received request body:", req.body);
-  console.log("Extracted locationID:", locationID);
 
   // Parse all IDs as integers
   const parsedPatientId = parseInt(patientId);
@@ -45,41 +80,90 @@ router.post('/', async (req, res) => {
     locationID: parsedLocationID
   });
 
-  if (!date || !time || !parsedPatientId || !parsedDoctorId || !parsedService1ID || !parsedLocationID) {
+  if (!date || !time || !parsedPatientId || !parsedDoctorId || isNaN(parsedService1ID) || !parsedLocationID) {
     console.log("Missing fields:", {
       date: !date,
       time: !time,
       patientId: !parsedPatientId,
       doctorId: !parsedDoctorId,
-      service1ID: !parsedService1ID,
+      service1ID: isNaN(parsedService1ID),
       locationID: !parsedLocationID
     });
     return res.status(400).json({ error: 'Missing appointmentDate, appointmentTime, patientId, doctorId, service1ID, or locationID' });
   }
 
   try {
-    // Check for conflict for the same doctor
-    const [existing] = await db.promise().query(
-      'SELECT * FROM appointments WHERE appointmentDate = ? AND appointmentTime = ? AND doctorId = ?',
-      [date, time, parsedDoctorId]
-    );
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'Time slot already booked for this doctor' });
+    const connection = await db.getConnection();
+    try {
+      // Check for conflict for the same doctor
+      const [existing] = await connection.query(
+        'SELECT * FROM appointments WHERE appointmentDate = ? AND appointmentTime = ? AND doctorId = ?',
+        [date, time, parsedDoctorId]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ error: 'Time slot already booked for this doctor' });
+      }
+
+      // Check if the time slot is within the doctor's schedule
+      const [schedule] = await connection.query(
+        `SELECT s.startTime, s.endTime, s.dayOfWeek 
+         FROM doctorschedule s 
+         WHERE s.doctorID = ?`,
+        [parsedDoctorId]
+      );
+
+      if (schedule.length === 0) {
+        return res.status(400).json({ error: 'Doctor schedule not found' });
+      }
+
+      const appointmentDay = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+      const scheduleDay = schedule[0].dayOfWeek;
+      
+      // Normalize both day names to ensure consistent comparison
+      const normalizedAppointmentDay = appointmentDay.toLowerCase().trim();
+      const normalizedScheduleDay = scheduleDay.toLowerCase().trim();
+      
+      if (normalizedAppointmentDay !== normalizedScheduleDay) {
+        return res.status(400).json({ error: 'Appointment date does not match doctor\'s schedule' });
+      }
+
+      const appointmentTime = new Date(`2000-01-01T${time}`);
+      const startTime = new Date(`2000-01-01T${schedule[0].startTime}`);
+      const endTime = new Date(`2000-01-01T${schedule[0].endTime}`);
+
+      if (appointmentTime < startTime || appointmentTime > endTime) {
+        return res.status(400).json({ error: 'Appointment time is outside doctor\'s working hours' });
+      }
+
+      // Insert appointment
+      const insertQuery = `
+        INSERT INTO appointments (
+          appointmentDate, 
+          appointmentTime, 
+          patientId, 
+          doctorId, 
+          service1ID, 
+          locationID,
+          status
+        ) VALUES (?, ?, ?, ?, ?, ?, 'Scheduled')
+      `;
+      const insertParams = [date, time, parsedPatientId, parsedDoctorId, parsedService1ID, parsedLocationID];
+      
+      console.log("Executing SQL query:", insertQuery);
+      console.log("With parameters:", insertParams);
+
+      await connection.query(insertQuery, insertParams);
+
+      res.status(201).json({ message: 'Appointment booked successfully' });
+    } finally {
+      connection.release();
     }
-
-    // Insert appointment
-    const insertQuery = 'INSERT INTO appointments (appointmentDate, appointmentTime, patientId, doctorId, service1ID, locationID) VALUES (?, ?, ?, ?, ?, ?)';
-    const insertParams = [date, time, parsedPatientId, parsedDoctorId, parsedService1ID, parsedLocationID];
-    
-    console.log("Executing SQL query:", insertQuery);
-    console.log("With parameters:", insertParams);
-
-    await db.promise().query(insertQuery, insertParams);
-
-    res.status(201).json({ message: 'Appointment booked' });
   } catch (err) {
     console.error("Error in appointment booking:", err);
-    res.status(500).json({ error: 'Booking failed' });
+    res.status(500).json({ 
+      error: 'Booking failed',
+      details: err.message 
+    });
   }
 });
 

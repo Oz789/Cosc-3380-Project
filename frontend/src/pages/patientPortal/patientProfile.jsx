@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "./patientProfile.css";
 import NavBar from "../../components/navBar";
+import EditIcon from '@mui/icons-material/Edit';
+import { IconButton } from '@mui/material';
 
 const PatientProfile = () => {
   const { patientID } = useParams();
+  const navigate = useNavigate();
   const [patientData, setPatientData] = useState({
     generalInfo: {},
     appointments: []
@@ -141,7 +144,15 @@ const PatientProfile = () => {
         <div className="profile-sections-container">
           {/* General Information Section */}
           <div className="profile-section">
-            <h2 className="section-title">General Information</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="section-title">General Information</h2>
+              <IconButton
+                onClick={() => navigate(`/register?patientID=${patientID}`)}
+                sx={{ color: '#00796B' }}
+              >
+                <EditIcon />
+              </IconButton>
+            </div>
             <div className="profile-info">
               {patientData.generalInfo && Object.keys(patientData.generalInfo).length > 0 ? (
                 <>
