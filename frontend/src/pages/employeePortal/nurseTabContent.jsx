@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 //import AdminFrames from "./frames/adminFrames";
 import AdminFramesTab from "../admin/frames/adminFramesTab";
-import ManageStaffTab from "../admin/employee/manageStaffTab";
+//import ManageStaffTab from "../admin/employee/manageStaffTab";
 import AdminContactsTab from "../admin/contacts/adminContactsTab";
-import AdminServicesTab from "../admin/services/adminServicesTab";
+//import AdminServicesTab from "../admin/services/adminServicesTab";
 import MsgManager from "../../components/msgManager";
 import EmployeeDetails from "./employeeDetails";
 //import ReceptionistAppointments from "./receptionistAppointments";

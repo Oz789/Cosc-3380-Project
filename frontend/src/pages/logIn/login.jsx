@@ -28,7 +28,7 @@ const Login = () => {
         localStorage.setItem("userLocation", data.user.locationID);
   
         if (data.role === "admin") {
-          return navigate(`/adminProfile/${data.user.employeeID}`);
+          return navigate("/admin-dashboard");
         } else if (data.role === "doctor") {
           localStorage.setItem("doctorID", data.doctorInfo.doctorID);
           console.log("DOCTOR INFO:", data.doctorInfo);

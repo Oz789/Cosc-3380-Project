@@ -2,22 +2,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 
-
-router.get('/', (req, res) => {
-
+router.get('/', async (req, res) => {
+  try {
     const sql = "SELECT * FROM messages";
-    db.query(sql, (err, results) => {
-      if (err)
-      {
-        console.error("Error retrieving from database", err);
-        return res.status(500).json({ error: "Database error. Please try again later."});
-      }
-         
-      res.json(results);
+    const [results] = await db.query(sql);
+    res.json(results);
+  } catch (err) {
+    console.error("Error retrieving from database:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).json({ 
+      error: "Database error. Please try again later.",
+      details: err.message,
+      stack: err.stack
     });
-
-
-
+  }
 });
 
 module.exports = router;

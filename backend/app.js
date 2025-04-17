@@ -11,6 +11,7 @@ const createDoctorRoute = require('./routes/doctor/createDoctor');
 const getDoctorRoute = require('./routes/doctor/getDoctor');
 const patientRoutes = require('./routes/patientRoutes');
 const messageRoutes = require('./routes/message/getMessage');
+const insuranceRoutes = require('./routes/insuranceRoutes');
 //const formRoutes = require('./routes/patients/createContacts');
 const createFramesRoute = require('./routes/admin/createFrames');
 const getFramesRoute = require('./routes/admin/getFrames');
@@ -28,6 +29,8 @@ const updateContactsRoute = require('./routes/admin/updateContacts');
 const updateServicesRoute = require('./routes/admin/updateServices');
 const getInventoryRoute = require('./routes/reports/getInventory');
 const appointmentRoutes = require('./routes/getAppointments');
+
+const schRoute = require('./routes/employee/schManager');
 const checkoutRoutes = require('./routes/checkoutRoutes');
 const authenticateToken = require('./middleware/auth');
 const updateEmployee = require('./routes/employee/updateEmployee');
@@ -43,6 +46,9 @@ const updateMedicalForm = require('./routes/nurse/updateNurseForm');
 const createExamReport = require('./routes/doctor/updateEyeExamForm');
 const createReferralRoute = require('./routes/doctor/referral');
 const endAppointmentRoute = require('./routes/doctor/endAppointment');
+const patientReportRoutes = require('./routes/patientReportRoutes');
+const billingRoutes = require('./routes/billing');
+const contactRoutes = require('./routes/contact');
 
 
 
@@ -50,6 +56,7 @@ const endAppointmentRoute = require('./routes/doctor/endAppointment');
 
 
 
+const updatePatientInfo = require('./routes/receptionist/getPatientInfo');
 
 
 
@@ -89,6 +96,10 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/patients', updateMedicalForm);
 //app.use('/api/submit-form', formRoutes);
+
+
+app.use('/api/schedule', schRoute);
+
 app.use('/', createContacts);
 app.use('/api', createFramesRoute);
 app.use('/api', getFramesRoute);
@@ -119,6 +130,12 @@ app.use('/api/appointments', updateStatus);
 app.use('/api/examReports', createExamReport);
 app.use('/api/referrals', createReferralRoute);
 app.use('/api/appointments', endAppointmentRoute);
+app.use('/api/insurance', insuranceRoutes);
+app.use('/api/patientReport', patientReportRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/contacts', contactRoutes);
+
+app.use('/api/allPatients', updatePatientInfo);
 
 
 

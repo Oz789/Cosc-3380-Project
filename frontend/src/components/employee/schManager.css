@@ -1,0 +1,11 @@
+
+.cd.td.ex {
+    padding: 0px;
+    border: none;
+}
+
+th, td {
+    text-align: none;
+    padding: 0px;
+    border: none;
+  }

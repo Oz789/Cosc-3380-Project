@@ -125,7 +125,7 @@ const AdminFrames = () => {
         sx={{ padding: 2 }}
       >
   {frames.map((frame) => (
-    <Grid2 item key={frame.id}>
+    <Grid2 item key={frame.frameID}>
       <Card className="admin-frame-card">
         <CardActionArea onClick={() => handleFramesClick(frame)}>
           <CardMedia

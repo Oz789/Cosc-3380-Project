@@ -4,10 +4,14 @@ const PatientFormViewer = ({ patientID }) => {
   const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
-    if (!patientID) return;
+    if (!patientID)
+       {console.log("nothing here") 
+        return;
+       }
 
     const fetchPatientData = async () => {
       try {
+        console.log(patientID + "   HEdjdRE");
         const res = await fetch(`http://localhost:5001/api/patients/${patientID}`);
         if (!res.ok) throw new Error("Failed to fetch patient");
         const data = await res.json();
@@ -23,6 +27,12 @@ const PatientFormViewer = ({ patientID }) => {
   if (!patientData) return <p>Loading medical form...</p>;
 
   const {
+    generalInfo = {},
+    medicalInfo = {},
+    appointments = []
+  } = patientData;
+  
+  const {
     firstName,
     lastName,
     DOB,
@@ -30,10 +40,10 @@ const PatientFormViewer = ({ patientID }) => {
     address,
     phoneNumber,
     email,
-    occupation,
-    medicalForm,
-    appointments,
-  } = patientData;
+    occupation
+  } = generalInfo;
+  
+  const medicalForm = medicalInfo;
 
   return (
     <div style={{ padding: "2rem", maxWidth: "700px", margin: "auto", border: "1px solid #ccc", borderRadius: "10px" }}>

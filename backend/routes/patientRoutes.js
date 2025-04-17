@@ -7,48 +7,79 @@ const db = require('../db');
 router.get('/:id', async (req, res) => {
   try {
     const patientId = req.params.id;
+    console.log('Fetching patient with ID:', patientId);
 
-    const [patientResult] = await db.promise().query(
+    // Get patient basic information
+    const [patientResult] = await db.query(
       'SELECT * FROM patient WHERE patientID = ?',
       [patientId]
     );
 
-    if (patientResult.length === 0) {
+    console.log('Patient query result:', patientResult);
+
+    if (!patientResult || patientResult.length === 0) {
+      console.log('No patient found with ID:', patientId);
       return res.status(404).json({ error: 'Patient not found' });
     }
 
-    const [medicalFormResult] = await db.promise().query(
-      'SELECT * FROM patientform WHERE patientID = ? ORDER BY visitDate DESC LIMIT 1',
-      [patientId]
-    );
+    // Get appointments with filtering options
+    const { showPast, serviceType } = req.query;
+    let appointmentsQuery = `
+      SELECT 
+        a.appointmentNumber,
+        DATE_FORMAT(a.appointmentDate, '%M %d, %Y') AS appointmentDate,
+        TIME_FORMAT(a.appointmentTime, '%h:%i %p') AS appointmentTime,
+        e.firstName AS doctorFirstName,
+        e.lastName AS doctorLastName,
+        s.serviceName,
+        l.name AS locationName,
+        a.status
+      FROM appointments a
+      JOIN doctors d ON a.doctorId = d.doctorID
+      JOIN employee e ON d.employeeID = e.employeeID
+      JOIN services s ON a.service1ID = s.serviceID
+      JOIN location l ON a.locationID = l.locationID
+      WHERE a.patientId = ?
+    `;
 
-    const [appointmentsResult] = await db.promise().query(
-      `SELECT 
-         a.appointmentDate,
-         TIME_FORMAT(a.appointmentTime, '%H:%i') AS appointmentTime,
-         e.firstName AS doctorFirstName,
-         e.lastName AS doctorLastName,
-         s.serviceName
-       FROM appointments a
-       JOIN doctors d ON a.doctorId = d.doctorID
-       JOIN employee e ON d.employeeID = e.employeeID
-       JOIN services s ON a.service1ID = s.serviceID
-       WHERE a.patientId = ?
-       ORDER BY a.appointmentDate, a.appointmentTime`,
-      [patientId]
-    );
-    
+    const queryParams = [patientId];
 
-    const patientData = {
-      ...patientResult[0],
-      medicalForm: medicalFormResult[0] || {},
+    // Add date filter
+    if (showPast === 'false') {
+      appointmentsQuery += ' AND a.appointmentDate >= CURDATE()';
+    }
+
+    // Add service type filter
+    if (serviceType) {
+      appointmentsQuery += ' AND a.service1ID = ?';
+      queryParams.push(serviceType);
+    }
+
+    appointmentsQuery += ' ORDER BY a.appointmentDate, a.appointmentTime';
+
+    console.log('Appointments query:', appointmentsQuery);
+    console.log('Query params:', queryParams);
+
+    const [appointmentsResult] = await db.query(appointmentsQuery, queryParams);
+    console.log('Appointments result:', appointmentsResult);
+
+    // Combine all results
+    const response = {
+      generalInfo: {
+        ...patientResult[0],
+        password: undefined // Don't send password
+      },
       appointments: appointmentsResult || []
     };
 
-    res.json(patientData);
+    console.log('Final response:', response);
+    res.json(response);
   } catch (error) {
-    console.error('Error fetching patient data:', error);
-    res.status(500).json({ error: 'Failed to fetch patient data' });
+    console.error('Error in patient route:', error);
+    res.status(500).json({ 
+      error: 'Server error', 
+      details: error.message
+    });
   }
 });
 
@@ -65,6 +96,7 @@ router.post('/submit', async (req, res) => {
     address,
     sex,
     occupation,
+    insuranceID,
     lastExamDate,
     usesCorrectiveLenses,
     usesContacts,
@@ -134,30 +166,10 @@ router.post('/submit', async (req, res) => {
         patientID, visitDate, lastExamDate, usesCorrectiveLenses, usesContacts, 
         LensesPrescription, ContactsPrescription, lastPrescriptionDate,
         healthConcerns, otherConcerns, conditions, otherConditions, 
-        hadSurgery, surgeries, otherSurgeries, allergies, additionalDetails
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        hadSurgery, surgeries, otherSurgeries, allergies, additionalDetails,
+        insuranceID
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
-
-    // Get patient's appointments with doctor and service info
-    const appointmentsQuery = `
-      SELECT 
-        a.appointmentDate,
-        TIME_FORMAT(a.appointmentTime, '%H:%i') AS appointmentTime,
-        e.firstName AS doctorFirstName,
-        e.lastName AS doctorLastName,
-        s.serviceName
-        FROM appointments a
-        JOIN doctors d ON a.doctorId = d.doctorID
-        JOIN employee e ON d.employeeID = e.employeeID
-        JOIN services s ON a.service1ID = s.serviceID
-        WHERE a.patientId = ?
-        ORDER BY a.appointmentDate, a.appointmentTime
-`;
-
-
-    //const [appointmentsResult] = await db.promise().query(appointmentsQuery, [patientId]);
-
 
     const medicalFormValues = [
       patientId,
@@ -176,9 +188,9 @@ router.post('/submit', async (req, res) => {
       (surgeries || []).join(','), 
       otherSurgeries,
       allergies,
-      additionalDetails
+      additionalDetails,
+      insuranceID
     ];
-    
 
     await db.promise().query(medicalFormQuery, medicalFormValues);
 

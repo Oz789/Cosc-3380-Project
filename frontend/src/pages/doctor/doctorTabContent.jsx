@@ -6,10 +6,11 @@ import CheckedInAppointments from "../employeePortal/checkedIn";
 import DocActiveAppointments from "./doctorActiveAppointments";
 import ReceptionistAppointments from "../employeePortal/receptionistAppointments";
 import ClinicAppointments from "../employeePortal/clinicAppointments";
+import { Box, Typography, Tabs, Tab, Paper } from '@mui/material';
 
 // import other tab content 
 
-const DoctorTabContent = ({ activeTab,doctor }) => {
+const DoctorTabContent = ({ activeTab, doctor }) => {
 
   const toggleMessager = () => {
     setMessager(!messager)
@@ -29,7 +30,7 @@ const DoctorTabContent = ({ activeTab,doctor }) => {
           case 1:
             return (
               <div className="w-full flex flex-row justify-center">
-                <DoctorAppointments />
+                <DocActiveAppointments />
               </div>
             );
     case 2:

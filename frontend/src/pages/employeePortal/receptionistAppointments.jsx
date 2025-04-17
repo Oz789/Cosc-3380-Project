@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '../doctor/doctorAppointments.css';
 import PatientFormViewer from '../patientPortal/patientFormViewer';
 
+import RecAppEdit from '../appointments/recEditApp';
+
 const groupByDate = (appointments) => {
   return appointments.reduce((acc, appt) => {
     const dt = new Date(`${appt.appointmentDate}T${appt.appointmentTime}`);
@@ -19,9 +21,13 @@ const groupByDate = (appointments) => {
 const ReceptionistAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [selectedPatientID, setSelectedPatientID] = useState(null);
+  const [selectedAppointmentID, setSelectedAppointmentID] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPatientName, setPatientName] = useState('');
   const [showTodayOnly, setShowTodayOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
+
+  const [viewMode, setViewMode] = useState(null);
 
 
   const locationID = localStorage.getItem("userLocation"); 
@@ -50,37 +56,48 @@ const ReceptionistAppointments = () => {
   };
   
 
-  useEffect(() => {
-    if (!locationID) return;
-
-    fetch(`http://localhost:5001/api/appointments/clinicAppointments/${locationID}`)
-      .then(res => res.json())
-      .then(data => {
-        const formatted = data.map(appt => {
-          const dateObj = new Date(appt.appointmentDate);
-          const yyyy = dateObj.getFullYear();
-          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const dd = String(dateObj.getDate()).padStart(2, '0');
-          const rawDate = `${yyyy}-${mm}-${dd}`;
-          const cleanTime = appt.appointmentTime?.slice(0, 5);
-
-          return {
-            appointmentID: appt.appointmentNumber,
-            patientID: appt.patientID,
-            patientName: `${appt.patientFirstName} ${appt.patientLastName}`.trim(),
-            doctorName: `${appt.doctorFirstName} ${appt.doctorLastName}`,
-            appointmentDate: rawDate,
-            appointmentTime: cleanTime,
-            status: appt.status
-          };
-        });
-
-        setAppointments(formatted);
-      })
-      .catch(err => {
-        console.error("Failed to fetch clinic-specific appointments:", err);
+  const fetchClinicAppointments = async (locationID) => {
+    try {
+      const res = await fetch(`http://localhost:5001/api/appointments/clinicAppointments/${locationID}`);
+      const data = await res.json();
+  
+      return data.map(appt => {
+        const dateObj = new Date(appt.appointmentDate);
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const rawDate = `${yyyy}-${mm}-${dd}`;
+        const cleanTime = appt.appointmentTime?.slice(0, 5);
+  
+        return {
+          appointmentID: appt.appointmentNumber,
+          patientID: appt.patientID,
+          patientName: `${appt.patientFirstName} ${appt.patientLastName}`.trim(),
+          doctorName: `${appt.doctorFirstName} ${appt.doctorLastName}`,
+          appointmentDate: rawDate,
+          appointmentTime: cleanTime,
+          status: appt.status
+        };
       });
-  }, [locationID]);
+    } catch (err) {
+      console.error("Failed to fetch clinic-specific appointments:", err);
+      return [];
+    }
+  };
+
+  const refreshAppointments = () => {
+    const locationID = localStorage.getItem("userLocation");
+    if (!locationID) {
+      console.warn("No location ID found in localStorage.");
+      return;
+    }
+  
+    fetchClinicAppointments(locationID).then(setAppointments);
+  };
+
+  useEffect(() => {
+    refreshAppointments()
+  }, []);
 
   const filtered = appointments.filter(appt =>
     appt.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -227,7 +244,15 @@ const ReceptionistAppointments = () => {
 
                   <button
                     className="appointment-button"
-                    onClick={() => setSelectedPatientID(appt.patientID)}
+                    onClick={() => 
+                      { setSelectedPatientID(appt.patientID); console.log(appt.patientID + "H"); setSelectedAppointmentID(appt.appointmentID); setPatientName(appt.patientName); setViewMode("edit"); } }
+                  >
+                    Edit Appt.
+                  </button>
+
+                  <button
+                    className="appointment-button"
+                    onClick={() => { setSelectedPatientID(appt.patientID); console.log(appt.patientID + "Hello"); setSelectedAppointmentID(appt.appointmentID); setPatientName(appt.patientName); setViewMode("view"); } }
                   >
                     View Form
                   </button>
@@ -239,11 +264,34 @@ const ReceptionistAppointments = () => {
       </div>
 
       <div className="appointment-right">
-        {selectedPatientID ? (
-          <PatientFormViewer patientID={selectedPatientID} />
-        ) : (
-          <div className="mock-placeholder">Select an appointment to view the form</div>
-        )}
+{selectedPatientID ? (
+  viewMode === "edit" ? (
+    <RecAppEdit
+      patientId={selectedPatientID}
+      appointmentID={selectedAppointmentID}
+      onAppointmentChange={refreshAppointments}
+      patientName={selectedPatientName}
+      onClose={() => {
+        //setSelectedPatientID(null);
+        setSelectedAppointmentID(null);
+        setViewMode(null);
+      }}
+    />
+  ) : (
+    
+    <PatientFormViewer
+      patientID={selectedPatientID}
+      onClick={console.log(selectedPatientID)}
+      onClose={() => {
+        //setSelectedPatientID(null);
+        setSelectedAppointmentID(null);
+        setViewMode(null);
+      }}
+    />
+  )
+) : (
+  <div className="mock-placeholder">Select an appointment to view the form</div>
+)}
       </div>
       
     </div>

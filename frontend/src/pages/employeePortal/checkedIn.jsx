@@ -244,4 +244,3 @@ const CheckedInAppointments = () => {
 };
 
 export default CheckedInAppointments;
-

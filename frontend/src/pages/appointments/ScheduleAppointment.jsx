@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './form.css';
+import './ScheduleAppointment.css';
+
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 export default function ScheduleAppointment({ prevStep, patientId }) {
   const [appointments, setAppointments] = useState({});
   const [selected, setSelected] = useState({ date: '', time: '', doctorId: ''});
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedServiceType, setSelectedServiceType] = useState('');
   const [doctorSchedules, setDoctorSchedules] = useState([]);
+
+  const [baseDate, setBaseDate] = useState(new Date());
   const navigate = useNavigate();
   const daysToShow = 7;
+  const buffer = 4;
 
   useEffect(() => {
     console.log("Appointments state changed:", appointments);
   }, [appointments]);
-  // ---------------- TIME HELPERS ----------------
+
   const convertTo24Hour = (time12h) => {
     const [time, modifier] = time12h.split(' ');
     let [hours, minutes] = time.split(':');
@@ -34,10 +41,16 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
   const getDayName = (dateStr) =>
     new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' });
 
+  const toInt = (value) => parseInt(value, 10);
+
   const generateTimeSlots = (start, end) => {
     const slots = [];
     let [sh, sm] = start.split(':').map(Number);
     const [eh, em] = end.split(':').map(Number);
+    
+    console.log(`Generating slots from ${start} to ${end}`);
+    console.log(`Parsed times - Start: ${sh}:${sm}, End: ${eh}:${em}`);
+    
     while (sh < eh || (sh === eh && sm < em)) {
       const time = new Date(0, 0, 0, sh, sm).toLocaleTimeString([], {
         hour: '2-digit',
@@ -50,19 +63,30 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
         sm = 0;
       }
     }
+    
+    console.log(`Generated slots:`, slots);
     return slots;
   };
 
-  // ---------------- DATA FETCHING ----------------
   const fetchLocations = async () => {
     const res = await fetch('http://localhost:5001/api/locations');
     const data = await res.json();
+    console.log("Locations data:", data);
     setLocations(data);
   };
 
   const fetchSchedules = async (locationID) => {
     const res = await fetch(`http://localhost:5001/api/schedule/location/${locationID}`);
     const data = await res.json();
+    console.log("Schedule Data:", data);
+    
+    // Log Friday's schedule specifically
+    const fridaySchedule = data.find(sched => sched.dayOfWeek === 'Friday');
+    if (fridaySchedule) {
+      console.log("Friday's schedule:", fridaySchedule);
+      console.log(`Friday's time range: ${fridaySchedule.startTime} to ${fridaySchedule.endTime}`);
+    }
+    
     setDoctorSchedules(data);
   };
 
@@ -70,14 +94,14 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
     const res = await fetch(`http://localhost:5001/api/appointments?locationID=${selectedLocation}`);
     const data = await res.json();
   
-    console.log("📦 Raw API data:", data); // ← FULL object
+    console.log("📦 Raw API data:", data);
   
     const map = {};
     data.forEach(({ appointmentDate, appointmentTime }) => {
       const dateStr = appointmentDate.substring(0, 10);
       const timeStr = appointmentTime.trim().padStart(8, '0');
   
-      console.log(`Extracted date: ${dateStr}, time: ${timeStr}`); // ← Track parsed values
+      console.log(`Extracted date: ${dateStr}, time: ${timeStr}`);
   
       if (!map[dateStr]) map[dateStr] = new Set();
       map[dateStr].add(timeStr);
@@ -87,10 +111,7 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
     console.log("Final Appointments Before Set:", map);
     setAppointments(map);
   };
-  
-  
 
-  // ---------------- EFFECTS ----------------
   useEffect(() => {
     fetchLocations();
   }, []);
@@ -102,20 +123,19 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
     }
   }, [selectedLocation]);
 
-  // ---------------- ACTIONS ----------------
   const handleSelect = (date, time, doctorId) => {
     setSelected({ date, time, doctorId});
   };
 
   const handleConfirm = async () => {
     const { date, time, doctorId} = selected;
-    if (!date || !time || !doctorId) {
-      console.log("Missing fields:", selected);
+    if (!date || !time || !doctorId || !selectedLocation) {
+      console.log("Missing fields:", { ...selected, locationID: selectedLocation });
       return;
     }
   
     const time24 = convertTo24Hour(time);
-    console.log("Submitting appointment:", { date, time: time24, doctorId, patientId });
+    console.log("Submitting appointment:", { date, time: time24, doctorId, patientId, locationID: selectedLocation });
   
     try {
       const res = await fetch('http://localhost:5001/api/appointments', {
@@ -126,17 +146,19 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
           time: time24,
           patientId,
           doctorId,
-          service1ID: 4
+          service1ID: selectedServiceType,
+          locationID: selectedLocation
         }),
       });
   
-      const text = await res.text(); // Show raw response in console
+      const text = await res.text();
       console.log("Server response:", res.status, text);
   
       if (res.ok) {
         alert('Appointment scheduled!');
         navigate(`/userProfile/${patientId}`);
       } else {
+        console.log(selectedServiceType);
         alert('That time is no longer available or server error.');
       }
     } catch (err) {
@@ -144,133 +166,141 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
       alert("Something went wrong");
     }
   };
-  
 
-  // ---------------- DISPLAY ----------------
   const scheduleMap = {};
   doctorSchedules.forEach((entry) => {
     if (!scheduleMap[entry.dayOfWeek]) scheduleMap[entry.dayOfWeek] = [];
     scheduleMap[entry.dayOfWeek].push(entry);
   });
 
-  return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-box">
-          <h2 className="login-title">Schedule Appointment</h2>
+  const getNextWeekday = (date, offset) => {
+    const nextDate = new Date(date);
+    let daysAdded = 0;
+    let currentOffset = 0;
+    
+    while (daysAdded < offset) {
+      currentOffset++;
+      const tempDate = new Date(date);
+      tempDate.setDate(date.getDate() + currentOffset);
+      
+      // Only count weekdays
+      if (tempDate.getDay() !== 0 && tempDate.getDay() !== 6) {
+        daysAdded++;
+      }
+    }
+    
+    nextDate.setDate(date.getDate() + currentOffset);
+    return nextDate;
+  };
 
-          {/* SELECT LOCATION */}
-          <div className="input-row">
-            <p>Select Location:</p>
+  return (
+    <div className="appointment-container">
+      <div className="appointment-header">
+        <h2>Schedule Appointment</h2>
+      </div>
+
+      <div className="appointment-grid">
+        <div className="location-selector">
+          <select
+            value={selectedLocation}
+            onChange={(e) => {
+              setSelectedLocation(e.target.value);
+              setSelectedServiceType('');
+            }}
+          >
+            <option value="">Select Location</option>
+            {locations.map((loc) => (
+              <option key={loc.locationID} value={loc.locationID}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(selectedLocation === '1' || selectedLocation === '2') && (
+          <div className="service-selector">
             <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
+              value={selectedServiceType}
+              onChange={(e) => setSelectedServiceType(e.target.value)}
+              required
             >
-              <option value="">Select Location</option>
-              {locations.map((loc) => (
-                <option key={loc.locationID} value={loc.locationID}>
-                  {loc.name}
-                </option>
-              ))}
+              <option value="">Select Service Type</option>
+              <option value="eyeExam">Eye Exam</option>
+              <option value="diseaseTreatment">Disease and Eye Treatment</option>
             </select>
           </div>
-
-          {/* TIME SLOT PICKER */}
-          {selectedLocation && (
-            <div className="appointment-grid" style={{ marginTop: '2rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${daysToShow}, 1fr)` }}>
-              
-              {(() => {
-        const baseDate = new Date();
-baseDate.setHours(12); 
-
-        return [...Array(daysToShow)].map((_, idx) => {
-          const dateObj = new Date(baseDate);
-          dateObj.setDate(baseDate.getDate() + idx);
-
-          const dateStr = dateObj.toISOString().split('T')[0];
-          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-          const readableDate = dateObj.toDateString();
-
-          const schedules = scheduleMap[dayName] || [];
-
-          return (
-            <div key={dateStr}>
-              <h4 style={{ fontWeight: 'bold', color: '#00796B' }}>
-                {dayName}<br />
-                {readableDate}
-              </h4>
-
-              {schedules.map((sched) => {
-                const slots = generateTimeSlots(sched.startTime, sched.endTime);
-
-                return (
-                  <div key={`${sched.doctorID}-${sched.scheduleID}`} style={{ marginBottom: '1rem' }}>
-                    <small style={{ color: '#444', fontStyle: 'italic' }}>
-                      {sched.doctorName} – {sched.serviceName}
-                    </small>
-
-                    {slots.map((hour) => {
-                      const hour24 = convertTo24Hour(hour);
-                      const isBooked = appointments[dateStr]?.has(hour24);
-                      const isSelected =
-                        selected.date === dateStr &&
-                        convertTo24Hour(selected.time) === hour24 &&
-                        selected.doctorId === sched.doctorID;
-
-                      return (
-                        <button
-                        key={hour}
-                        onClick={() =>
-                          handleSelect(dateStr, hour, sched.doctorID)
-                        }
-                        disabled={isBooked}
-                        style={{
-                          backgroundColor: isSelected
-                            ? '#28a745'
-                            : isBooked
-                            ? '#f0f0f0'
-                            : '#ffffff',
-                          color: isBooked ? '#aaa' : '#00796B',
-                          border: isSelected
-                            ? '2px solid #28a745'
-                            : '2px solid #00796B',
-                          margin: '4px',
-                          padding: '6px',
-                          width: '100%',
-                          borderRadius: '6px',
-                          cursor: isBooked ? 'not-allowed' : 'pointer',
-                          fontSize: '0.85rem',
-                          fontWeight: 'bold',
-                          opacity: isBooked ? 0.5 : 1,
-                          transition: '0.2s ease',
-                        }}
-                      >
-                        {hour}
-                      </button>
-                      
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        });
-      })()}
-
-    </div>
-          {/* CONFIRM BUTTON */}
-          <div className="nav-buttons" style={{ marginTop: '2rem' }}>
-            <button onClick={prevStep}>Back</button>
-            <button type="button" onClick={handleConfirm}>Confirm Appointment</button>
-          </div>
-  </div>
-)}
-
-        </div>
+        )}
       </div>
-      <button onClick={() => alert("Clicked!")}>Test Click</button>
+
+      {selectedLocation && (
+        <div className="time-slot-grid">
+          {[...Array(daysToShow)].map((_, idx) => {
+            const dateObj = getNextWeekday(new Date(), idx);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+            const readableDate = dateObj.toDateString();
+
+            const schedules = scheduleMap[dayName] || [];
+
+            return (
+              <div key={dateStr}>
+                <h3 style={{ color: '#2c3e50', marginBottom: '1rem' }}>
+                  {dayName}<br />
+                  {readableDate}
+                </h3>
+
+                {schedules.map((sched) => {
+                  const slots = generateTimeSlots(sched.startTime, sched.endTime);
+
+                  return (
+                    <div key={`${sched.doctorID}-${sched.scheduleID}`} style={{ marginBottom: '1rem' }}>
+                      <p className="doctor-info">
+                        {sched.doctorName}
+                      </p>
+
+                      {slots.map((hour) => {
+                        const hour24 = convertTo24Hour(hour);
+                        const isBooked = appointments[dateStr]?.has(hour24);
+                        const isSelected =
+                          selected.date === dateStr &&
+                          convertTo24Hour(selected.time) === hour24 &&
+                          selected.doctorId === sched.doctorID;
+                        const isDisabled = isBooked || 
+                          ((selectedLocation === '1' || selectedLocation === '2') && !selectedServiceType);
+
+                        return (
+                          <button
+                            key={hour}
+                            onClick={() => handleSelect(dateStr, hour, sched.doctorID)}
+                            disabled={isBooked}
+                            className={`time-slot ${isSelected ? 'selected' : ''} ${isBooked ? 'unavailable' : ''}`}
+                          >
+                            {hour}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {selected.date && (
+        <div className="confirmation-section">
+          <h3>Appointment Details</h3>
+          <div className="confirmation-details">
+            <p><strong>Date:</strong> {new Date(selected.date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> {selected.time}</p>
+          </div>
+          <div className="action-buttons">
+            <button onClick={prevStep}>Back</button>
+            <button onClick={handleConfirm}>Confirm Appointment</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

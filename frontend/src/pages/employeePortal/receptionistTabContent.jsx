@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 //import AdminFrames from "./frames/adminFrames";
 import AdminFramesTab from "../admin/frames/adminFramesTab";
 import ManageStaffTab from "../admin/employee/manageStaffTab";
@@ -11,6 +11,12 @@ import ReceptionistAppointments from "./receptionistAppointments";
 import ClinicAppointments from "./clinicAppointments";
 import CheckedInAppointments from "./checkedIn";
 
+import TestManager from "../../components/employee/testManager";
+
+import NPatientEdit from "./receptionistPatientEdit";
+
+import PatientDropdown from "./dropDown";
+
 const EmpTabContent = ({ activeTab }) => {
 
   const toggleMessager = () => {
@@ -18,19 +24,45 @@ const EmpTabContent = ({ activeTab }) => {
     console.log(messager)
 
   }
+
+  const handleClic = () => {
+    setClicked(!hasClicked)
+  }
+
+  const falseClic = () => {
+    setClicked(false)
+  }
+
+
   const [messager, setMessager] = useState(false);
   const [ message, setMessage] = useState("null");
+
+  const [hasClicked, setClicked] = useState(false);
+
+
   const msgPasser = (m) => {
     setMessage(m);
   }
+
+  useEffect(() => {
+    if (activeTab !== 1) {
+      setClicked(false);
+    }
+  }, [activeTab]);
+
   switch (activeTab) {
   
     case 0:
-      return <EmployeeDetails/>
+      return <EmployeeDetails/>;
 
       case 1:
         return (
+
+          <div>
+            {!hasClicked && (
+
           <div style={{ padding: "2rem" }}>
+            
             <h2 style={{ fontFamily: "Bell MT", color: "#00796B", marginBottom: "1.5rem" }}>
               Patient Tools
             </h2>
@@ -52,27 +84,26 @@ const EmpTabContent = ({ activeTab }) => {
             >
               Register Patient
             </button>
+
+              
       
-            <button
-              style={{
-                backgroundColor: "#c8ede0",
-                color: "#003d33",
-                padding: "10px 20px",
-                border: "1px solid #00796B",
-                borderRadius: "8px",
-                fontFamily: "Bell MT",
-                fontSize: "1rem",
-                cursor: "pointer",
-              }}
-              onClick={() => window.location.href = "/book-Appointment"}
-            >
-              New Appointment
-            </button>
+
+
+              <PatientDropdown bool = {handleClic}/>
+
           </div>
-        )
+
+          )}
+
+          { hasClicked && ( <NPatientEdit/>)}
+          </div>
+        );
+
+        
+        
       
     case 2:
-      return <ReceptionistAppointments/>
+      return  <ReceptionistAppointments/>;
     case 3:
       return ;
     case 4:

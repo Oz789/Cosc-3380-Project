@@ -1,7 +1,8 @@
 import React from "react";
 import { Grid, Box, Button } from "@mui/material";
+import { Link } from "react-router-dom";
 
-const ReportColumn = ({ label, borderRight }) => (
+const ReportColumn = ({ label, borderRight, to }) => (
   <Box
     sx={{
       height: "calc(90vh - 40px)",
@@ -12,6 +13,8 @@ const ReportColumn = ({ label, borderRight }) => (
     }}
   >
     <Button
+      component={Link}
+      to={to}
       variant="contained"
       sx={{
         fontSize: "1.2rem",
@@ -35,14 +38,17 @@ const ReportColumn = ({ label, borderRight }) => (
 const AdminReports = () => {
   return (
     <Grid container>
-      <Grid item xs={12} md={4}>
-        <ReportColumn label="Staff" borderRight />
+      <Grid item xs={12} md={3}>
+        <ReportColumn label="Staff" borderRight to="/staff-report" />
       </Grid>
-      <Grid item xs={12} md={4}>
-        <ReportColumn label="Patients" borderRight />
+      <Grid item xs={12} md={3}>
+        <ReportColumn label="Patient Demographics" borderRight to="/patientDemographicsReport" />
       </Grid>
-      <Grid item xs={12} md={4}>
-        <ReportColumn label="Inventory" />
+      <Grid item xs={12} md={3}>
+        <ReportColumn label="Patient Prescriptions" borderRight to="/patientPrescriptionReport" />
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <ReportColumn label="Inventory" to="/inventory-report" />
       </Grid>
     </Grid>
   );

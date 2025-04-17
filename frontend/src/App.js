@@ -30,6 +30,10 @@ import RegisterPatient from "./pages/logIn/register";
 import NurseProfilePage from "./pages/employeePortal/nurseProfile";
 import NurseExamPage from "./pages/employeePortal/nurseExamPage";
 import DoctorExamForm from './pages/doctor/doctorExamForm';
+import PatientReport from "./pages/admin/reports/patientReport";
+import PatientDemographicsReport from "./pages/admin/reports/patientDemographicsReport";
+import PatientPrescriptionReport from "./pages/admin/reports/patientPrescriptionReport";
+import AdminReports from "./pages/admin/reports/adminReportsPage";
 //import ReferralForm from "./pages/doctor/referral";
 
 
@@ -116,8 +120,12 @@ function App() {
           <Route path="/admin/admin-eyeContacts" element={<AdminContacts />} />
           <Route path="/admin/admin-services" element={<AdminServices />} />
           <Route path="/admin/manageStaff" element={<AdminStaff />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/adminProfile/:employeeID" element={<AdminProfilePage />} />
           <Route path="/inventory-report" element={<InventoryReport />} />
+          <Route path="/patient-report" element={<PatientReport />} />
+          <Route path="/patientDemographicsReport" element={<PatientDemographicsReport />} />
+          <Route path="/patientPrescriptionReport" element={<PatientPrescriptionReport />} />
           <Route path="/payment" element={<PaymentForm />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
