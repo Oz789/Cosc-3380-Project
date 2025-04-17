@@ -1,127 +1,287 @@
 // PaymentForm.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "./paymentForm.css"; // Import the CSS file for styling
+import axios from "axios";
+import "./paymentForm.css";
+import { useCart } from "../../context/CartContext"; // Import the useCart hook
 
 function PaymentForm() {
-    const { state } = useLocation();
-    const navigate = useNavigate();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const { clearCart } = useCart(); // Access the clearCart function
 
-    const [paymentInfo, setPaymentInfo] = useState({
-        cardName: "",
-        cardNumber: "",
-        cvv: "",
-        expiry: "",
-        address: "",
-        address2: "",
-        country: "United States",
-        zipCode: "",
-        city: "",
-        state: "",
-        email: " "
-    });
+  const [paymentInfo, setPaymentInfo] = useState({
+    cardName: "",
+    cardNumber: "",
+    cvv: "",
+    expiry: "",
+    address: "",
+    address2: "",
+    country: "United States",
+    zipCode: "",
+    city: "",
+    state: "",
+    email: " ",
+  });
 
-    const [frameData, setFrameData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const [frameData, setFrameData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({});
 
-    useEffect(() => {
-        if (state && state.frame) {
-            setFrameData(state.frame);
-            setLoading(false);
-        } else {
-            setError("Frame data not available.");
-            setLoading(false);
-            // Optionally, redirect back to the frames page
-            // navigate('/frames');
-        }
-    }, [state, navigate]);
+  useEffect(() => {
+    if (state?.frames?.length) {
+      setFrameData(state.frames);
+      setLoading(false);
+    } else {
+      alert("Missing cart data. Please return to the frames page.");
+      navigate("/frames");
+    }
+  }, [state, navigate]);
 
-    const handleChange = (e) => {
-        setPaymentInfo({ ...paymentInfo, [e.target.name]: e.target.value });
-    };
+  const handleChange = (e) => {
+    setPaymentInfo({ ...paymentInfo, [e.target.name]: e.target.value });
+    // Clear any specific error when the user starts typing
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (frameData) {
-            console.log("Payment Info:", paymentInfo);
-            console.log("Frame Data:", frameData);
-            alert(`Payment processed successfully for ${frameData.name}! (Check console for details)`);
-            // In a real application, you would send this data to your backend for processing.
-        } else {
-            alert("Error: No frame data to process payment for.");
-        }
-    };
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {};
 
-    if (loading) {
-        return <div>Loading payment information...</div>;
+    if (!paymentInfo.cardName.trim()) {
+      newErrors.cardName = "Name on card is required";
+      isValid = false;
+    }
+    if (!/^\d{13,19}$/.test(paymentInfo.cardNumber.trim())) {
+      newErrors.cardNumber = "Invalid card number";
+      isValid = false;
+    }
+    if (!/^\d{3,4}$/.test(paymentInfo.cvv.trim())) {
+      newErrors.cvv = "Invalid CVV";
+      isValid = false;
+    }
+    if (!paymentInfo.expiry) {
+      newErrors.expiry = "Expiration date is required";
+      isValid = false;
+    }
+    if (!paymentInfo.address.trim()) {
+      newErrors.address = "Address is required";
+      isValid = false;
+    }
+    if (!/^\d{5}(?:-\d{4})?$/.test(paymentInfo.zipCode.trim())) {
+      newErrors.zipCode = "Invalid ZIP code";
+      isValid = false;
+    }
+    if (!paymentInfo.city.trim()) {
+      newErrors.city = "City is required";
+      isValid = false;
+    }
+    if (!paymentInfo.state.trim()) {
+      newErrors.state = "State is required";
+      isValid = false;
+    }
+    if (paymentInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paymentInfo.email.trim())) {
+      newErrors.email = "Invalid email address";
+      isValid = false;
     }
 
-    if (error) {
-        return <div>Error: {error}</div>;
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!frameData.length) {
+      alert("Missing frame data.");
+      return;
     }
 
-    if (!frameData) {
-        return <div>Frame data not available. Please return to the frames page and try again.</div>;
+    if (!validateForm()) {
+      return;
     }
 
-    return (
-        <div className="payment-container">
-            <h1>Payment Information for {frameData.name}</h1>
-            {state && state.prescription && <h2>Prescription: {state.prescription}</h2>}
+    // Logging for debugging
+    console.log("Submitting checkout with items:", frameData);
 
-            <form onSubmit={handleSubmit} className="payment-form">
-                <fieldset>
-                    <legend>Payment Information</legend>
-                    <label>Cardholder's Name:</label>
-                    <input type="text" name="cardName" value={paymentInfo.cardName} onChange={handleChange} required />
+    try {
+      const response = await axios.post("http://localhost:5001/api/checkout", {
+        items: frameData.map((frame) => ({
+          frameID: frame.frameID || null,
+          contactID: frame.contactID || null,
+        })),
+        paymentInfo: paymentInfo, // Include payment information in the request if needed
+      });
 
-                    <label>Card Number:</label>
-                    <input type="text" name="cardNumber" value={paymentInfo.cardNumber} onChange={handleChange} required />
+      alert(`Payment processed successfully! Total: $${response.data.totalPrice.toFixed(2)}`);
 
-                    <label>Card Security Code (CVV):</label>
-                    <input type="text" name="cvv" value={paymentInfo.cvv} onChange={handleChange} required />
+      // Clear the cart after successful payment
+      clearCart();
+      console.log("Cart cleared after successful payment.");
 
-                    <label>Expiration Date:</label>
-                    <input type="month" name="expiry" value={paymentInfo.expiry} onChange={handleChange} required />
-                </fieldset>
+      navigate("/frames"); // Or navigate to an order confirmation page
+    } catch (err) {
+      console.error("Checkout error:", err);
+      const message = err.response?.data?.error || "An error occurred while processing your payment.";
+      alert(`Payment failed: ${message}`);
+    }
+  };
 
-                <fieldset>
-                    <legend>Billing Information</legend>
-                    <label>Address Line 1:</label>
-                    <input type="text" name="address" value={paymentInfo.address} onChange={handleChange} required />
+  if (loading) return <div>Loading payment form...</div>;
 
-                    <label>Address Line 2:</label>
-                    <input type="text" name="address2" value={paymentInfo.address2} onChange={handleChange} />
+  return (
+    <div className="payment-form-container"> {/* Consistent container class */}
+      <h2>Payment Information</h2>
+      <form onSubmit={handleSubmit} className="payment-form"> {/* Added form class for styling */}
+        <fieldset className="card-details"> {/* More descriptive class */}
+          <legend>Card Details</legend>
+          <div className="form-group"> {/* Grouping labels and inputs */}
+            <label htmlFor="cardName">Name on Card:</label>
+            <input
+              type="text"
+              id="cardName"
+              name="cardName"
+              value={paymentInfo.cardName}
+              onChange={handleChange}
+              required
+            />
+            {errors.cardName && <p className="error-message">{errors.cardName}</p>}
+          </div>
 
-                    <label>Country:</label>
-                    <select name="country" value={paymentInfo.country} onChange={handleChange}>
-                        <option>United States</option>
-                    </select>
+          <div className="form-group">
+            <label htmlFor="cardNumber">Card Number:</label>
+            <input
+              type="text"
+              id="cardNumber"
+              name="cardNumber"
+              value={paymentInfo.cardNumber}
+              onChange={handleChange}
+              required
+            />
+            {errors.cardNumber && <p className="error-message">{errors.cardNumber}</p>}
+          </div>
 
-                    <label>ZIP Code:</label>
-                    <input type="text" name="zipCode" value={paymentInfo.zipCode} onChange={handleChange} required />
+          <div className="form-group card-details-group"> {/* Using a specific group for layout */}
+            <div>
+              <label htmlFor="cvv">CVV:</label>
+              <input
+                type="text"
+                id="cvv"
+                name="cvv"
+                value={paymentInfo.cvv}
+                onChange={handleChange}
+                required
+              />
+              {errors.cvv && <p className="error-message">{errors.cvv}</p>}
+            </div>
+            <div>
+              <label htmlFor="expiry">Expiration Date:</label>
+              <input
+                type="month"
+                id="expiry"
+                name="expiry"
+                value={paymentInfo.expiry}
+                onChange={handleChange}
+                required
+              />
+              {errors.expiry && <p className="error-message">{errors.expiry}</p>}
+            </div>
+          </div>
+        </fieldset>
 
-                    <label>City:</label>
-                    <input type="text" name="city" value={paymentInfo.city} onChange={handleChange} />
+        <fieldset className="billing-information"> {/* More descriptive class */}
+          <legend>Billing Information</legend>
+          <div className="form-group">
+            <label htmlFor="address">Address Line 1:</label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              value={paymentInfo.address}
+              onChange={handleChange}
+              required
+            />
+            {errors.address && <p className="error-message">{errors.address}</p>}
+          </div>
 
-                    <label>State:</label>
-                    <input type="text" name="state" value={paymentInfo.state} onChange={handleChange} />
-                </fieldset>
+          <div className="form-group">
+            <label htmlFor="address2">Address Line 2:</label>
+            <input
+              type="text"
+              id="address2"
+              name="address2"
+              value={paymentInfo.address2}
+              onChange={handleChange}
+            />
+          </div>
 
-                <fieldset>
-                    <legend>Receipt Information</legend>
-                    <label>Email Address:</label>
-                    <input type="email" name="email" value={paymentInfo.email} onChange={handleChange} />
-                </fieldset>
+          <div className="form-group">
+            <label htmlFor="country">Country:</label>
+            <select id="country" name="country" value={paymentInfo.country} onChange={handleChange}>
+              <option>United States</option>
+            </select>
+          </div>
 
-                <div className="form-buttons">
-                    <button type="submit">Continue</button>
-                    <button type="button" onClick={() => navigate("/frames")} className="exit-btn">Exit</button>
-                </div>
-            </form>
+          <div className="form-group zip-city-state-group"> {/* Group for horizontal layout */}
+            <div>
+              <label htmlFor="zipCode">ZIP Code:</label>
+              <input
+                type="text"
+                id="zipCode"
+                name="zipCode"
+                value={paymentInfo.zipCode}
+                onChange={handleChange}
+                required
+              />
+              {errors.zipCode && <p className="error-message">{errors.zipCode}</p>}
+            </div>
+            <div>
+              <label htmlFor="city">City:</label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                value={paymentInfo.city}
+                onChange={handleChange}
+              />
+              {errors.city && <p className="error-message">{errors.city}</p>}
+            </div>
+            <div>
+              <label htmlFor="state">State:</label>
+              <input
+                type="text"
+                id="state"
+                name="state"
+                value={paymentInfo.state}
+                onChange={handleChange}
+              />
+              {errors.state && <p className="error-message">{errors.state}</p>}
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset className="receipt-information"> {/* More descriptive class */}
+          <legend>Receipt Information</legend>
+          <div className="form-group">
+            <label htmlFor="email">Email Address:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={paymentInfo.email}
+              onChange={handleChange}
+            />
+            {errors.email && <p className="error-message">{errors.email}</p>}
+          </div>
+        </fieldset>
+
+        <div className="form-buttons">
+          <button type="submit" className="submit-button">Continue</button> {/* More specific class */}
+          <button type="button" onClick={() => navigate("/frames")} className="exit-button">Exit</button> {/* More specific class */}
         </div>
-    );
+      </form>
+    </div>
+  );
 }
 
 export default PaymentForm;

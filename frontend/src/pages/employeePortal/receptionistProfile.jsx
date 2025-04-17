@@ -5,9 +5,10 @@ import ReceptionistTabs from "./receptionistTabs";
 import ReceptionistTabContent from "./receptionistTabContent";
 
 const EmployeeProfilePage = () => {
-  const { employeeID } = useParams(); // dynamically from route
+  const { employeeID } = useParams();
   const [activeTab, setActiveTab] = useState(0);
   const [employee, setEmployee] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     fetch(`http://localhost:5001/api/employees/${employeeID}`)
@@ -16,17 +17,31 @@ const EmployeeProfilePage = () => {
       .catch((err) => console.error("Error fetching employee:", err));
   }, [employeeID]);
 
+  useEffect(() => {
+    if (employeeID) {
+      fetch(`http://localhost:5001/api/stock-alerts?employeeID=${employeeID}`)
+        .then((res) => res.json())
+        .then((data) => setNotifications(data))
+        .catch((err) => console.error("Error fetching stock alerts:", err));
+    }
+  }, [employeeID]);
+
   if (!employee) return <p>Loading employee profile...</p>;
 
   const user = {
     name: `${employee.firstName} ${employee.lastName}`,
     role: employee.title || "Receptionist",
-    avatar: "/Images/dog-secretary.webp", // replace with dynamic picture
+    avatar: "/Images/dog-secretary.webp",
   };
 
   return (
     <div>
-      <ReceptionistHeader name={user.name} role={user.role} avatar={user.avatar} />
+      <ReceptionistHeader
+        name={user.name}
+        role={user.role}
+        avatar={user.avatar}
+        notifications={notifications}
+      />
       <ReceptionistTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       <ReceptionistTabContent activeTab={activeTab} employee={employee} />
     </div>
@@ -34,4 +49,3 @@ const EmployeeProfilePage = () => {
 };
 
 export default EmployeeProfilePage;
-
