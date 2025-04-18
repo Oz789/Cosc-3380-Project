@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
   try {
     console.log('Starting patient report query...');
     const query = `
-      SELECT 
+      SELECT DISTINCT
         p.patientID,
         p.firstName,
         p.lastName,
@@ -19,17 +19,22 @@ router.get('/', async (req, res) => {
         pf.healthConcerns,
         pf.conditions,
         pf.surgeries,
-        a.appointmentDate,
+        pf.LensesPrescription,
+        pf.ContactsPrescription,
+        DATE_FORMAT(a.appointmentDate, '%Y-%m-%d') as appointmentDate,
         l.Name as locationName,
         l.address as locationAddress,
         CONCAT(e.firstName, ' ', e.lastName) as doctorName
       FROM patient p
+      INNER JOIN appointments a ON p.patientID = a.patientID
       LEFT JOIN patientForm pf ON p.patientID = pf.patientID
       LEFT JOIN insurance i ON pf.insuranceID = i.insuranceID
-      LEFT JOIN appointments a ON p.patientID = a.patientID
       LEFT JOIN location l ON a.locationID = l.locationID
       LEFT JOIN doctors d ON a.doctorID = d.doctorID
       LEFT JOIN employee e ON d.employeeID = e.employeeID
+      WHERE a.appointmentDate IS NOT NULL 
+        AND a.appointmentDate != ''
+        AND a.status != 'Cancelled'
       ORDER BY a.appointmentDate DESC
     `;
 
@@ -37,6 +42,7 @@ router.get('/', async (req, res) => {
     const [results] = await db.query(query);
     console.log('Query successful, processing results...');
     console.log('Number of results:', results.length);
+    console.log('Sample result:', results[0]);
 
     const processedResults = results.map(row => {
       try {
@@ -85,7 +91,9 @@ router.get('/', async (req, res) => {
           locationAddress: row.locationAddress || 'Not specified',
           doctorName: row.doctorName || 'Not specified',
           insuranceProvider: row.insuranceProvider || 'Not specified',
-          paymentStatus: row.paymentStatus || 'Not specified'
+          paymentStatus: row.paymentStatus || 'Not specified',
+          LensesPrescription: row.LensesPrescription || 'N/A',
+          ContactsPrescription: row.ContactsPrescription || 'N/A'
         };
       } catch (error) {
         console.error('Error processing row:', error);
@@ -99,7 +107,9 @@ router.get('/', async (req, res) => {
           locationAddress: row.locationAddress || 'Not specified',
           doctorName: row.doctorName || 'Not specified',
           insuranceProvider: row.insuranceProvider || 'Not specified',
-          paymentStatus: row.paymentStatus || 'Not specified'
+          paymentStatus: row.paymentStatus || 'Not specified',
+          LensesPrescription: 'N/A',
+          ContactsPrescription: 'N/A'
         };
       }
     });

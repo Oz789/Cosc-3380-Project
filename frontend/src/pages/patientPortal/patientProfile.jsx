@@ -31,7 +31,7 @@ const PatientProfile = () => {
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5001/api/contacts/submit', {
+      const response = await fetch('http://localhost:5001/api/contacts/submit-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +47,8 @@ const PatientProfile = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit message');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit message');
       }
 
       const data = await response.json();
@@ -56,7 +57,7 @@ const PatientProfile = () => {
       setTimeout(() => setContactStatus(''), 3000);
     } catch (error) {
       console.error('Error submitting contact form:', error);
-      setContactStatus('Error sending message. Please try again.');
+      setContactStatus(error.message || 'Error sending message. Please try again.');
     }
   };
 

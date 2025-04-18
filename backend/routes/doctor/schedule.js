@@ -11,7 +11,8 @@ router.get('/location/:locationID', async (req, res) => {
       const [results] = await connection.query(`
         SELECT 
           s.scheduleID, 
-          s.doctorID, 
+          s.doctorID,
+          s.locationID, 
           e.firstName, 
           e.lastName,
           s.dayOfWeek, 

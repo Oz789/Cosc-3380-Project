@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 export default function GeneralInfoForm({ nextStep, handleChange, values }) {
   const [errors, setErrors] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
   const [formData, setFormData] = useState({
     ...values,
     insuranceID: values.insuranceID || '',
@@ -45,20 +46,21 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
     fetchInsuranceDetails();
   }, [formData.insuranceID]);
 
-  const validateForm = () => {
+  // Update form validity whenever formData changes
+  useEffect(() => {
     const newErrors = {};
     
     // Name validation
-    if (!formData.firstName.trim()) {
+    if (!formData.firstName?.trim()) {
       newErrors.firstName = 'First name is required';
     }
-    if (!formData.lastName.trim()) {
+    if (!formData.lastName?.trim()) {
       newErrors.lastName = 'Last name is required';
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
+    if (!formData.email?.trim()) {
       newErrors.email = 'Email is required';
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
@@ -66,14 +68,14 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
 
     // Phone validation
     const phoneRegex = /^\+?[\d\s-()]{10,}$/;
-    if (!formData.phoneNumber.trim()) {
+    if (!formData.phoneNumber?.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
     } else if (!phoneRegex.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Please enter a valid phone number';
     }
 
     // Address validation
-    if (!formData.address.trim()) {
+    if (!formData.address?.trim()) {
       newErrors.address = 'Address is required';
     }
 
@@ -83,7 +85,7 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
     }
 
     // Occupation validation
-    if (!formData.occupation.trim()) {
+    if (!formData.occupation?.trim()) {
       newErrors.occupation = 'Occupation is required';
     }
 
@@ -109,8 +111,8 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setIsFormValid(Object.keys(newErrors).length === 0);
+  }, [formData]);
 
   const handleInputChange = (field, value) => {
     console.log(`Changing ${field} to:`, value);
@@ -171,8 +173,7 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
   };
 
   const handleNext = () => {
-    console.log('Form data before next step:', formData);
-    if (validateForm()) {
+    if (isFormValid) {
       nextStep();
     }
   };
@@ -298,6 +299,7 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
           className={errors.insuranceID ? 'error' : ''}
         >
           <option value="">Select Insurance Provider</option>
+          <option value="1">Aetna</option>
           {insuranceOptions.map((insurance) => (
             <option key={insurance.insuranceID} value={insurance.insuranceID}>
               {insurance.insuranceProvider}
@@ -330,7 +332,14 @@ export default function GeneralInfoForm({ nextStep, handleChange, values }) {
         </div>
       ))}
       <button onClick={addEmergencyContact}>Add Contact</button>
-      <button onClick={handleNext}>Next</button>
+      <button 
+        type="button" 
+        onClick={handleNext}
+        disabled={!isFormValid}
+        className="next-button"
+      >
+        Next
+      </button>
     </div>
   );
 }

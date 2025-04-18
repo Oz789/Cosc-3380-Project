@@ -26,10 +26,10 @@ router.get('/', async (req, res) => {
           s.endTime,
           s.dayOfWeek
         FROM appointments a
-        JOIN patient p ON a.patientID = p.patientID
-        JOIN doctors d ON a.doctorID = d.doctorID
-        JOIN employee e ON d.employeeID = e.employeeID
-        JOIN doctorschedule s ON d.doctorID = s.doctorID
+        LEFT JOIN patient p ON a.patientID = p.patientID
+        LEFT JOIN doctors d ON a.doctorID = d.doctorID
+        LEFT JOIN employee e ON d.employeeID = e.employeeID
+        LEFT JOIN doctorschedule s ON d.doctorID = s.doctorID
       `;
       let params = [];
 
@@ -46,7 +46,12 @@ router.get('/', async (req, res) => {
 
       sql += ' ORDER BY a.appointmentDate, a.appointmentTime';
 
+      console.log("Executing SQL query:", sql);
+      console.log("With parameters:", params);
+
       const [rows] = await connection.query(sql, params);
+      console.log("Query results:", rows);
+
       // Ensure we always return an array, even if empty
       res.json(rows || []);
     } finally {
@@ -54,6 +59,11 @@ router.get('/', async (req, res) => {
     }
   } catch (err) {
     console.error("Error fetching appointments:", err);
+    console.error("Error details:", {
+      code: err.code,
+      sqlState: err.sqlState,
+      message: err.message
+    });
     res.status(500).json({ 
       error: 'Failed to fetch appointments',
       details: err.message 
@@ -116,15 +126,36 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Doctor schedule not found' });
       }
 
-      const appointmentDay = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+      // Get day of week using UTC to match frontend
+      const appointmentDay = new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', { 
+        weekday: 'long',
+        timeZone: 'UTC'
+      });
       const scheduleDay = schedule[0].dayOfWeek;
+      
+      console.log("Day comparison:", {
+        appointmentDay,
+        scheduleDay,
+        normalizedAppointmentDay: appointmentDay.toLowerCase().trim(),
+        normalizedScheduleDay: scheduleDay.toLowerCase().trim(),
+        inputDate: date,
+        schedule: schedule[0]
+      });
       
       // Normalize both day names to ensure consistent comparison
       const normalizedAppointmentDay = appointmentDay.toLowerCase().trim();
       const normalizedScheduleDay = scheduleDay.toLowerCase().trim();
       
       if (normalizedAppointmentDay !== normalizedScheduleDay) {
-        return res.status(400).json({ error: 'Appointment date does not match doctor\'s schedule' });
+        return res.status(400).json({ 
+          error: 'Appointment date does not match doctor\'s schedule',
+          details: {
+            selectedDay: normalizedAppointmentDay,
+            availableDay: normalizedScheduleDay,
+            doctorId: parsedDoctorId,
+            locationId: parsedLocationID
+          }
+        });
       }
 
       const appointmentTime = new Date(`2000-01-01T${time}`);
@@ -169,34 +200,52 @@ router.post('/', async (req, res) => {
 
 //update given appt
 router.put('/', async (req, res) => {
-  const { date, time, patientId, doctorId, service1ID, appointmentID, status, locationID} = req.body;
+  const { date, time, patientId, doctorId, service1ID, appointmentID, status, locationID } = req.body;
 
-  
+  // Parse all IDs as integers
+  const parsedPatientId = parseInt(patientId);
+  const parsedDoctorId = parseInt(doctorId);
+  const parsedService1ID = parseInt(service1ID);
+  const parsedLocationID = parseInt(locationID);
+  const parsedAppointmentID = parseInt(appointmentID);
 
-  if (!appointmentID || !date || !time || !patientId || !doctorId || !service1ID || !locationID) {
-    return res.status(400).json({ error: 'Missing appointmentDate, appointmentTime, patientId, doctorId, or service1ID' });
+  if (!date || !time || !parsedPatientId || !parsedDoctorId || isNaN(parsedService1ID) || !parsedLocationID || !parsedAppointmentID) {
+    console.log("Missing fields:", {
+      date: !date,
+      time: !time,
+      patientId: !parsedPatientId,
+      doctorId: !parsedDoctorId,
+      service1ID: isNaN(parsedService1ID),
+      locationID: !parsedLocationID,
+      appointmentID: !parsedAppointmentID
+    });
+    return res.status(400).json({ error: 'Missing appointmentDate, appointmentTime, patientId, doctorId, service1ID, or locationID' });
   }
 
   try {
-    //  Check for conflict for the same doctor
-    const [existing] = await db.promise().query(
-      'SELECT * FROM appointments WHERE appointmentDate = ? AND appointmentTime = ? AND doctorId = ? AND appointmentNumber != ?',
-      [date, time, doctorId, appointmentID]
-    );
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'Time slot already booked for this doctor' });
+    const connection = await db.getConnection();
+    try {
+      // Check for conflict for the same doctor
+      const [existing] = await connection.query(
+        'SELECT * FROM appointments WHERE appointmentDate = ? AND appointmentTime = ? AND doctorId = ? AND appointmentNumber != ?',
+        [date, time, parsedDoctorId, parsedAppointmentID]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ error: 'Time slot already booked for this doctor' });
+      }
+
+      await connection.query(
+        `UPDATE appointments SET appointmentDate = ?, appointmentTime = ?, patientId = ?, doctorId = ?, service1ID = ?, locationID = ?, status = ? 
+        WHERE appointmentNumber = ?`,
+        [date, time, parsedPatientId, parsedDoctorId, parsedService1ID, parsedLocationID, status, parsedAppointmentID]
+      );
+
+      res.status(201).json({ message: 'Appointment updated successfully' });
+    } finally {
+      connection.release();
     }
-
-    
-    await db.promise().query(
-      `UPDATE appointments SET appointmentDate = ?, appointmentTime = ?, patientId = ?, doctorId = ?, service1ID = ?, locationID = ?, status = ? 
-      WHERE appointmentNumber = ?`,
-      [date, time, patientId, doctorId, service1ID, locationID, status, appointmentID]
-    );
-
-    res.status(201).json({ message: 'Appointment updated successfully' });
   } catch (err) {
-    console.error("Error updating appointment:",err);
+    console.error("Error updating appointment:", err);
     res.status(500).json({ error: 'Failed to update appointment' });
   }
 });
@@ -210,7 +259,7 @@ router.delete('/:appointmentID', async (req, res) => {
   }
 
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       'DELETE FROM appointments WHERE appointmentNumber = ?',
       [appointmentID]
     );
@@ -226,5 +275,45 @@ router.delete('/:appointmentID', async (req, res) => {
   }
 });
 
+// Get clinic-specific appointments
+router.get('/clinicAppointments/:locationID', async (req, res) => {
+  const { locationID } = req.params;
+  
+  try {
+    const connection = await db.getConnection();
+    try {
+      const sql = `
+        SELECT 
+          a.appointmentNumber,
+          a.appointmentDate,
+          a.appointmentTime,
+          a.status,
+          a.doctorID,
+          a.patientID,
+          p.firstName AS patientFirstName,
+          p.lastName AS patientLastName,
+          e.firstName AS doctorFirstName,
+          e.lastName AS doctorLastName
+        FROM appointments a
+        JOIN patient p ON a.patientID = p.patientID
+        JOIN doctors d ON a.doctorID = d.doctorID
+        JOIN employee e ON d.employeeID = e.employeeID
+        WHERE a.locationID = ?
+        ORDER BY a.appointmentDate, a.appointmentTime
+      `;
+      
+      const [rows] = await connection.query(sql, [locationID]);
+      res.json(rows || []);
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error("Error fetching clinic appointments:", err);
+    res.status(500).json({ 
+      error: 'Failed to fetch clinic appointments',
+      details: err.message 
+    });
+  }
+});
 
 module.exports = router;
