@@ -264,16 +264,25 @@ const StockMonitor = () => {
 
   const restockSingleItem = async (itemID, itemType, customAmount = RESTOCK_AMOUNT) => {
     try {
-      await axios.post("http://localhost:5001/api/order-most-purchased", {
+      const response = await axios.post("http://localhost:5001/api/order-most-purchased", {
         itemID,
         itemType,
         restockAmount: customAmount,
       });
-      setMessage(`Restocked ${customAmount} units successfully.`);
-      fetchInventory();
+      
+      if (response.data && response.data.newStockCount !== undefined) {
+        setMessage(`Restocked ${customAmount} units successfully. New stock count: ${response.data.newStockCount}`);
+      } else {
+        setMessage("Restocked successfully");
+      }
+      
+      // Refresh the inventory data
+      await fetchInventory();
     } catch (err) {
       console.error("Restock failed:", err);
-      setError("Failed to restock item.");
+      const errorMessage = err.response?.data?.error || "Failed to restock item";
+      const errorDetails = err.response?.data?.details || "";
+      setError(`${errorMessage}${errorDetails ? `: ${errorDetails}` : ''}`);
     }
   };
 

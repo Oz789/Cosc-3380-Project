@@ -7,14 +7,14 @@ import { Grid } from "@mui/material";
 import "./home.css";
 import NavBar from "../../components/cartNavBar";
 
-const homeBackground = "./images/home.jpg"; 
+const homeBackground = "https://invisioneyewear.com/wp-content/uploads/2023/03/african-american-woman-wearing-crizal-lenses.png";
 
 
 const services = [
-  { title: "Comprehensive Eye Exams", image: "/images/exams.jpg", description: "" },
-  { title: "Injury & Disease Treatment", image: "/images/injury.jpg", description: "" },
-  { title: "Children's Eye Care", image: "/images/kids.jpg", description: "" },
-  { title: "Contacts & Frames", image: "/images/frames copy.jpg", description: "" },
+  { title: "Comprehensive Eye Exams", image: "https://t4.ftcdn.net/jpg/05/02/15/15/360_F_502151561_oZKT2pDgQokfhU7del9rJcMQMiT22eGJ.jpg", description: "" },
+  { title: "Injury & Disease Treatment", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfs1POlV1WKhKzfx4g0OkiU3S7J9Jx_9mexg&s", description: "" },
+  { title: "Children's Eye Care", image: "https://jonaspauleyewear.com/cdn/shop/collections/Clear_Glasses_Collection.png?crop=center&height=630&v=1713539774&width=1200", description: "" },
+  { title: "Contacts & Frames", image: "https://www.warbyparker.com/learn/wp-content/uploads/2022/12/how-to-choose-glasses.jpg", description: "" },
 ];
 
 const Home = () => {

@@ -5,11 +5,9 @@ import Box from '@mui/material/Box';
 import { DataGrid, GridColDef } from '@mui/x-data-grid'; 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:5001',
 });
-
 
 const theme = createTheme({
   components: {
@@ -28,114 +26,102 @@ const theme = createTheme({
   },
 });
 
-
-
 const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
-    {
-      field: 'email',
-      headerName: 'E-mail',
-      width: 150,
-      editable: true,
-    },
-    {
-      field: 'created_at',
-      headerName: 'Message Created At',
-      width: 150,
-      editable: true,
-    },
+  { field: 'id', headerName: 'ID', width: 90 },
+  {
+    field: 'name',
+    headerName: 'Name',
+    width: 150,
+    editable: false,
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 200,
+    editable: false,
+  },
+  {
+    field: 'message',
+    headerName: 'Message',
+    width: 300,
+    editable: false,
+  },
+  {
+    field: 'created_at',
+    headerName: 'Date',
+    width: 150,
+    editable: false,
+    valueFormatter: (params) => {
+      return new Date(params.value).toLocaleString();
+    }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 120,
+    editable: false,
+  }
+];
 
-  ];
+const MsgManager = (props) => {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get('http://localhost:5001/api/contacts');
+        if (response.data && Array.isArray(response.data)) {
+          setMessages(response.data);
+        } else {
+          setError('Invalid response format');
+        }
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+        setError('Failed to fetch messages');
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchMessages();
+  }, []);
 
-  const MsgManager = (props) => {
+  const handleRowClick = (params) => {
+    const clickedRow = params.row;
+    props.pass(clickedRow);
+    props.bool();
+  };
 
-    let [buffer2, setBuffer2] = useState("null")
+  if (loading) {
+    return <div>Loading messages...</div>;
+  }
 
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
-    const [msg, SetMsg] = useState([]);
-    // useEffect(() => {
-    //   axios
-    //     .post('http://localhost:5001/api/test', { message: "Hello from React!" }) 
-    //     .then((response) => console.log(response.data))
-    //     .catch((error) => console.error(" Error fetching test route:", error));
-    // }, []);
-    useEffect(() => {
-      axios.get('http://localhost:5001/api/messages')
-      .then((response) => SetMsg(response.data))
-      .catch((error) => console.error("Error fetching messages:", error));
-    }, []);
-    
-    //axiosInstance.post('/test')
-    //}
-    // );
-
-    const msgList = [...msg];
-
-    const rows = msgList.map((item) => ({
-
-      id: item.id,
-      email: item.email,
-      created_at: item.created_at
-
-    }));
-      
-      
-      
-      
-      //{ id: 1, email: 'Snow', created_at: 'Jon PENIS PSOSIJSENFEFSH'},
-
-  
-      const handleRowClick = (params) => {
-        const clickedRow = params.row;
-        console.log('Clicked row data:', clickedRow.email);
-        let entry = msgList.find( element => element.id === clickedRow.id)
-        props.pass(entry);
-        props.bool();
-        //let test = props.setMessager()
-        
- 
-        
-        // Access specific values:
-        // const name = clickedRow.name;
-        // const age = clickedRow.age;
-      };
-    
-
-    return(
-
-      
-      <ThemeProvider theme={theme}>
-        
+  return (
+    <ThemeProvider theme={theme}>
       <Box sx={{ height: 400, width: '100%' }}>
         <DataGrid
-        rows={rows}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              pageSize: 5,
+          rows={messages}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 5,
+              },
             },
-          },
-        }}
-        pageSizeOptions={[5]}
-        // checkboxSelection
-         disableRowSelectionOnClick
-         //onRowClick={(rows)=>{handleClick(rows.email)}}
-         onRowClick={handleRowClick}
-
-        //  onCellClick={(params,event) => {
-        //    event.stopPropagation();
-        //  }}
-        // disableSelectionOnCLick
-      
-      />
+          }}
+          pageSizeOptions={[5]}
+          disableRowSelectionOnClick
+          onRowClick={handleRowClick}
+        />
       </Box>
-      </ThemeProvider>
-    );
-
+    </ThemeProvider>
+  );
 };
-
 
 export default MsgManager;

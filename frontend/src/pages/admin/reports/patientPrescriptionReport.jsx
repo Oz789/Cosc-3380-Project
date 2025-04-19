@@ -129,7 +129,7 @@ const PatientPrescriptionReport = () => {
   };
 
   const processPrescriptionStats = (data) => {
-    console.log('Raw patient data:', data); // Debug log for raw data
+    console.log('Raw patient data:', JSON.stringify(data, null, 2)); // Pretty print the data
     
     const stats = {
       withLenses: data.filter(p => p.usesCorrectiveLenses === '1' || p.usesCorrectiveLenses === 1).length,
@@ -137,7 +137,13 @@ const PatientPrescriptionReport = () => {
       total: data.length
     };
     
-    console.log('Calculated stats:', stats); // Debug log for calculated stats
+    console.log('Calculated stats:', {
+      totalPatients: stats.total,
+      patientsWithLenses: stats.withLenses,
+      patientsWithContacts: stats.withContacts,
+      percentageWithLenses: ((stats.withLenses / stats.total) * 100).toFixed(2) + '%',
+      percentageWithContacts: ((stats.withContacts / stats.total) * 100).toFixed(2) + '%'
+    });
     
     // Calculate patients with neither lenses nor contacts
     const withNeither = data.filter(p => 
@@ -151,7 +157,7 @@ const PatientPrescriptionReport = () => {
       { name: 'Neither', value: withNeither, percentage: (withNeither / stats.total * 100).toFixed(1) }
     ];
 
-    console.log('Final prescription data:', prescriptionData); // Debug log for final data
+    console.log('Final prescription data:', JSON.stringify(prescriptionData, null, 2));
     setPrescriptionStats(prescriptionData);
   };
 
@@ -236,7 +242,7 @@ const PatientPrescriptionReport = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get("http://localhost:5001/api/patientReport/");
+      const response = await axios.get("http://localhost:5001/api/patientReport");
       const data = response.data;
       
       if (data.length === 0) {
@@ -294,9 +300,9 @@ const PatientPrescriptionReport = () => {
               onChange={(e) => setSelectedDate(e.target.value)}
               label="Date"
             >
-              <MenuItem value="">All Dates</MenuItem>
+              <MenuItem key="all-dates" value="">All Dates</MenuItem>
               {uniqueDates.map(date => (
-                <MenuItem key={date} value={date}>
+                <MenuItem key={`date-${date}`} value={date}>
                   {new Date(date).toLocaleDateString()}
                 </MenuItem>
               ))}
@@ -312,9 +318,9 @@ const PatientPrescriptionReport = () => {
               onChange={(e) => setSelectedLocation(e.target.value)}
               label="Location"
             >
-              <MenuItem value="">All Locations</MenuItem>
+              <MenuItem key="all-locations" value="">All Locations</MenuItem>
               {uniqueLocations.map(location => (
-                <MenuItem key={location} value={location}>{location}</MenuItem>
+                <MenuItem key={`location-${location}`} value={location}>{location}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -328,9 +334,9 @@ const PatientPrescriptionReport = () => {
               onChange={(e) => setSelectedDoctor(e.target.value)}
               label="Doctor"
             >
-              <MenuItem value="">All Doctors</MenuItem>
+              <MenuItem key="all-doctors" value="">All Doctors</MenuItem>
               {uniqueDoctors.map(doctor => (
-                <MenuItem key={doctor} value={doctor}>{doctor}</MenuItem>
+                <MenuItem key={`doctor-${doctor}`} value={doctor}>{doctor}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -344,9 +350,9 @@ const PatientPrescriptionReport = () => {
               onChange={(e) => setSelectedHealthConcern(e.target.value)}
               label="Health Concern"
             >
-              <MenuItem value="">All Concerns</MenuItem>
+              <MenuItem key="all-concerns" value="">All Concerns</MenuItem>
               {uniqueHealthConcerns.map(concern => (
-                <MenuItem key={concern} value={concern}>{concern}</MenuItem>
+                <MenuItem key={`concern-${concern}`} value={concern}>{concern}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -553,18 +559,29 @@ const PatientPrescriptionReport = () => {
               <TableCell><b>Health Concerns</b></TableCell>
               <TableCell><b>Lenses</b></TableCell>
               <TableCell><b>Contacts</b></TableCell>
+              <TableCell><b>Lenses Rx</b></TableCell>
+              <TableCell><b>Contacts Rx</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredPatients.map((patient, index) => (
               <TableRow key={index}>
                 <TableCell>{patient.firstName} {patient.lastName}</TableCell>
-                <TableCell>{new Date(patient.appointmentDate).toLocaleDateString()}</TableCell>
-                <TableCell>{patient.locationName}</TableCell>
-                <TableCell>{patient.doctorName}</TableCell>
-                <TableCell>{patient.healthConcerns?.join(', ') || 'None'}</TableCell>
+                <TableCell>
+                  {patient.appointmentDate ? 
+                    new Date(patient.appointmentDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit'
+                    }) : 'No Date'}
+                </TableCell>
+                <TableCell>{patient.locationName || 'Not Specified'}</TableCell>
+                <TableCell>{patient.doctorName || 'Not Assigned'}</TableCell>
+                <TableCell>{Array.isArray(patient.healthConcerns) ? patient.healthConcerns.join(', ') : 'None'}</TableCell>
                 <TableCell>{patient.usesCorrectiveLenses === '1' || patient.usesCorrectiveLenses === 1 ? 'Yes' : 'No'}</TableCell>
                 <TableCell>{patient.usesContacts === '1' || patient.usesContacts === 1 ? 'Yes' : 'No'}</TableCell>
+                <TableCell>{patient.LensesPrescription || 'N/A'}</TableCell>
+                <TableCell>{patient.ContactsPrescription || 'N/A'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

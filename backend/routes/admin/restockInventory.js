@@ -29,6 +29,10 @@ router.post('/restock', async (req, res) => {
 router.post('/order-most-purchased', async (req, res) => {
   const { itemID, itemType, restockAmount } = req.body;
 
+  if (!itemID || !itemType || !restockAmount) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   try {
     let table = "";
     let idField = "";
@@ -43,17 +47,42 @@ router.post('/order-most-purchased', async (req, res) => {
       return res.status(400).json({ error: "Invalid itemType" });
     }
 
-    const updateQuery = `
-      UPDATE ${table}
-      SET stockCount = stockCount + ?
-      WHERE ${idField} = ?
-    `;
+    // First check if the item exists
+    const [existingItem] = await db.query(
+      `SELECT stockCount FROM ${table} WHERE ${idField} = ?`,
+      [itemID]
+    );
 
-    await db.promise().query(updateQuery, [restockAmount, itemID]);
-    res.json({ message: "Restocked successfully" });
+    if (!existingItem || existingItem.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    // Perform the update
+    const [result] = await db.query(
+      `UPDATE ${table} SET stockCount = stockCount + ? WHERE ${idField} = ?`,
+      [restockAmount, itemID]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Failed to update stock count" });
+    }
+
+    // Get the updated stock count
+    const [updatedItem] = await db.query(
+      `SELECT stockCount FROM ${table} WHERE ${idField} = ?`,
+      [itemID]
+    );
+    
+    res.json({ 
+      message: "Restocked successfully",
+      newStockCount: updatedItem[0].stockCount
+    });
   } catch (err) {
     console.error("Failed to restock:", err);
-    res.status(500).json({ error: "Failed to restock item." });
+    res.status(500).json({ 
+      error: "Failed to restock item",
+      details: err.message 
+    });
   }
 });
 

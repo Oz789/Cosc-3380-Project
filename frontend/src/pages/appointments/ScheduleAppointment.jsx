@@ -48,68 +48,88 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
     let [sh, sm] = start.split(':').map(Number);
     const [eh, em] = end.split(':').map(Number);
     
-    console.log(`Generating slots from ${start} to ${end}`);
-    console.log(`Parsed times - Start: ${sh}:${sm}, End: ${eh}:${em}`);
-    
     while (sh < eh || (sh === eh && sm < em)) {
       const time = new Date(0, 0, 0, sh, sm).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       });
       slots.push(time);
-      sm += 60;
+      sm += 30; // Changed from 60 to 30 for 30-minute intervals
       if (sm >= 60) {
         sh++;
         sm = 0;
       }
     }
     
-    console.log(`Generated slots:`, slots);
     return slots;
   };
 
   const fetchLocations = async () => {
-    const res = await fetch('http://localhost:5001/api/locations');
-    const data = await res.json();
-    console.log("Locations data:", data);
-    setLocations(data);
+    try {
+      const res = await fetch('http://localhost:5001/api/locations');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      console.log("Locations data:", data);
+      // Ensure data is an array before setting it
+      setLocations(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching locations:", err);
+      // Set locations to empty array on error
+      setLocations([]);
+    }
   };
 
   const fetchSchedules = async (locationID) => {
-    const res = await fetch(`http://localhost:5001/api/schedule/location/${locationID}`);
-    const data = await res.json();
-    console.log("Schedule Data:", data);
-    
-    // Log Friday's schedule specifically
-    const fridaySchedule = data.find(sched => sched.dayOfWeek === 'Friday');
-    if (fridaySchedule) {
-      console.log("Friday's schedule:", fridaySchedule);
-      console.log(`Friday's time range: ${fridaySchedule.startTime} to ${fridaySchedule.endTime}`);
+    console.log(`Fetching schedules for location ${locationID}`);
+    try {
+      const res = await fetch(`http://localhost:5001/api/schedule/location/${locationID}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      console.log("Fetched doctor schedules:", data);
+      setDoctorSchedules(data);
+    } catch (err) {
+      console.error("Error fetching schedules:", err);
     }
-    
-    setDoctorSchedules(data);
   };
 
+  useEffect(() => {
+    console.log("Doctor schedules state changed:", doctorSchedules);
+  }, [doctorSchedules]);
+
   const fetchAppointments = async () => {
-    const res = await fetch(`http://localhost:5001/api/appointments?locationID=${selectedLocation}`);
-    const data = await res.json();
-  
-    console.log("📦 Raw API data:", data);
-  
-    const map = {};
-    data.forEach(({ appointmentDate, appointmentTime }) => {
-      const dateStr = appointmentDate.substring(0, 10);
-      const timeStr = appointmentTime.trim().padStart(8, '0');
-  
-      console.log(`Extracted date: ${dateStr}, time: ${timeStr}`);
-  
-      if (!map[dateStr]) map[dateStr] = new Set();
-      map[dateStr].add(timeStr);
-      console.log(`Mapped DB date → ${appointmentDate} → ${dateStr} with time ${timeStr}`);
-    });
-  
-    console.log("Final Appointments Before Set:", map);
-    setAppointments(map);
+    try {
+      const res = await fetch(`http://localhost:5001/api/appointments?locationID=${selectedLocation}`);
+      const data = await res.json();
+    
+      console.log("📦 Raw API data:", data);
+    
+      if (!Array.isArray(data)) {
+        console.error("Expected array but got:", data);
+        return;
+      }
+    
+      const map = {};
+      data.forEach(({ appointmentDate, appointmentTime }) => {
+        const dateStr = appointmentDate.substring(0, 10);
+        const timeStr = appointmentTime.trim().padStart(8, '0');
+    
+        console.log(`Extracted date: ${dateStr}, time: ${timeStr}`);
+    
+        if (!map[dateStr]) map[dateStr] = new Set();
+        map[dateStr].add(timeStr);
+        console.log(`Mapped DB date → ${appointmentDate} → ${dateStr} with time ${timeStr}`);
+      });
+    
+      console.log("Final Appointments Before Set:", map);
+      setAppointments(map);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+      setAppointments({});
+    }
   };
 
   useEffect(() => {
@@ -124,25 +144,73 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
   }, [selectedLocation]);
 
   const handleSelect = (date, time, doctorId) => {
-    setSelected({ date, time, doctorId});
+    console.log("Selected appointment:", { date, time, doctorId });
+    setSelected({ date, time, doctorId });
   };
 
   const handleConfirm = async () => {
-    const { date, time, doctorId} = selected;
-    if (!date || !time || !doctorId || !selectedLocation) {
-      console.log("Missing fields:", { ...selected, locationID: selectedLocation });
+    const { date, time, doctorId } = selected;
+    console.log("Confirming appointment with:", { date, time, doctorId, patientId, selectedServiceType, selectedLocation });
+
+    if (!date || !time || !doctorId || !patientId || !selectedServiceType || !selectedLocation) {
+      console.warn("Missing required fields:", {
+        date: !date,
+        time: !time,
+        doctorId: !doctorId,
+        patientId: !patientId,
+        serviceType: !selectedServiceType,
+        location: !selectedLocation
+      });
+      alert('Please fill in all required fields');
       return;
     }
-  
+
     const time24 = convertTo24Hour(time);
-    console.log("Submitting appointment:", { date, time: time24, doctorId, patientId, locationID: selectedLocation });
-  
+    
+    // Format date to YYYY-MM-DD
+    const selectedDate = new Date(date);
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    
+    // Get day of week
+    const selectedDayOfWeek = selectedDate.toLocaleDateString('en-US', { 
+      weekday: 'long'
+    });
+
+    // Find the doctor's schedule for this day
+    const doctorSchedule = doctorSchedules.find(schedule => 
+      schedule.doctorID === doctorId && 
+      schedule.dayOfWeek.toLowerCase() === selectedDayOfWeek.toLowerCase()
+    );
+
+    if (!doctorSchedule) {
+      const doctorSchedulesForDoctor = doctorSchedules.filter(s => s.doctorID === doctorId);
+      const availableDays = [...new Set(doctorSchedulesForDoctor.map(s => s.dayOfWeek))];
+      alert(`Doctor is not available on ${selectedDayOfWeek}. Available days: ${availableDays.join(', ')}`);
+      return;
+    }
+
+    // Validate time is within schedule
+    const [selectedHour, selectedMinute] = time24.split(':').map(Number);
+    const [startHour, startMinute] = doctorSchedule.startTime.split(':').map(Number);
+    const [endHour, endMinute] = doctorSchedule.endTime.split(':').map(Number);
+
+    const selectedTimeInMinutes = selectedHour * 60 + selectedMinute;
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+
+    if (selectedTimeInMinutes < startTimeInMinutes || selectedTimeInMinutes >= endTimeInMinutes) {
+      alert(`Selected time ${time} is outside of doctor's working hours (${doctorSchedule.startTime} - ${doctorSchedule.endTime})`);
+      return;
+    }
+
     try {
-      const res = await fetch('http://localhost:5001/api/appointments', {
+      const response = await fetch('http://localhost:5001/api/appointments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          date,
+          date: formattedDate,
           time: time24,
           patientId,
           doctorId,
@@ -150,46 +218,33 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
           locationID: selectedLocation
         }),
       });
-  
-      const text = await res.text();
-      console.log("Server response:", res.status, text);
-  
-      if (res.ok) {
-        alert('Appointment scheduled!');
-        navigate(`/userProfile/${patientId}`);
-      } else {
-        console.log(selectedServiceType);
-        alert('That time is no longer available or server error.');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to schedule appointment');
       }
-    } catch (err) {
-      console.error("Fetch failed:", err);
-      alert("Something went wrong");
+
+      const data = await response.json();
+      console.log('Appointment scheduled successfully:', data);
+      alert('Appointment scheduled successfully!');
+      navigate('/appointments');
+    } catch (error) {
+      console.error('Error scheduling appointment:', error);
+      alert(error.message || 'Failed to schedule appointment. Please try again.');
     }
   };
 
   const scheduleMap = {};
   doctorSchedules.forEach((entry) => {
+    console.log("Processing schedule entry:", entry);
     if (!scheduleMap[entry.dayOfWeek]) scheduleMap[entry.dayOfWeek] = [];
     scheduleMap[entry.dayOfWeek].push(entry);
   });
+  console.log("Schedule map:", scheduleMap);
 
   const getNextWeekday = (date, offset) => {
     const nextDate = new Date(date);
-    let daysAdded = 0;
-    let currentOffset = 0;
-    
-    while (daysAdded < offset) {
-      currentOffset++;
-      const tempDate = new Date(date);
-      tempDate.setDate(date.getDate() + currentOffset);
-      
-      // Only count weekdays
-      if (tempDate.getDay() !== 0 && tempDate.getDay() !== 6) {
-        daysAdded++;
-      }
-    }
-    
-    nextDate.setDate(date.getDate() + currentOffset);
+    nextDate.setDate(date.getDate() + offset);
     return nextDate;
   };
 
@@ -225,8 +280,8 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
               required
             >
               <option value="">Select Service Type</option>
-              <option value="eyeExam">Eye Exam</option>
-              <option value="diseaseTreatment">Disease and Eye Treatment</option>
+              <option value="4">Eye Exam</option>
+              <option value="5">Disease and Eye Treatment</option>
             </select>
           </div>
         )}
@@ -235,12 +290,13 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
       {selectedLocation && (
         <div className="time-slot-grid">
           {[...Array(daysToShow)].map((_, idx) => {
-            const dateObj = getNextWeekday(new Date(), idx);
+            const dateObj = getNextWeekday(baseDate, idx);
             const dateStr = dateObj.toISOString().split('T')[0];
             const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
             const readableDate = dateObj.toDateString();
 
             const schedules = scheduleMap[dayName] || [];
+            console.log(`Checking schedules for ${dayName} (${dateStr}):`, schedules);
 
             return (
               <div key={dateStr}>
@@ -250,12 +306,13 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
                 </h3>
 
                 {schedules.map((sched) => {
+                  console.log(`Generating slots for doctor ${sched.doctorID} on ${dayName}`);
                   const slots = generateTimeSlots(sched.startTime, sched.endTime);
 
                   return (
                     <div key={`${sched.doctorID}-${sched.scheduleID}`} style={{ marginBottom: '1rem' }}>
                       <p className="doctor-info">
-                        {sched.doctorName}
+                        Dr. {sched.firstName} {sched.lastName}
                       </p>
 
                       {slots.map((hour) => {
@@ -272,7 +329,7 @@ export default function ScheduleAppointment({ prevStep, patientId }) {
                           <button
                             key={hour}
                             onClick={() => handleSelect(dateStr, hour, sched.doctorID)}
-                            disabled={isBooked}
+                            disabled={isDisabled}
                             className={`time-slot ${isSelected ? 'selected' : ''} ${isBooked ? 'unavailable' : ''}`}
                           >
                             {hour}

@@ -42,6 +42,7 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
     new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' });
 
   const generateTimeSlots = (start, end) => {
+    console.log(`Generating time slots from ${start} to ${end}`);
     const slots = [];
     let [sh, sm] = start.split(':').map(Number);
     const [eh, em] = end.split(':').map(Number);
@@ -57,6 +58,7 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
         sm = 0;
       }
     }
+    console.log(`Generated slots:`, slots);
     return slots;
   };
 
@@ -64,12 +66,15 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
   const fetchLocations = async () => {
     const res = await fetch('http://localhost:5001/api/locations');
     const data = await res.json();
+    console.log("Fetched locations:", data);
     setLocations(data);
   };
 
   const fetchSchedules = async (locationID) => {
+    console.log(`Fetching schedules for location ${locationID}`);
     const res = await fetch(`http://localhost:5001/api/schedule/location/${locationID}`);
     const data = await res.json();
+    console.log("Fetched doctor schedules:", data);
     setDoctorSchedules(data);
   };
 
@@ -108,6 +113,10 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
       fetchAppointments();
     }
   }, [selectedLocation]);
+
+  useEffect(() => {
+    console.log("Doctor schedules state changed:", doctorSchedules);
+  }, [doctorSchedules]);
 
   // ---------------- ACTIONS ----------------
   const handleSelect = (date, time, doctorId) => {
@@ -163,6 +172,7 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
     if (!scheduleMap[entry.dayOfWeek]) scheduleMap[entry.dayOfWeek] = [];
     scheduleMap[entry.dayOfWeek].push(entry);
   });
+  console.log("Schedule map:", scheduleMap);
 
   return (
     <div className="rec-page">
@@ -246,6 +256,7 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
     }); // e.g., "Apr 15, 2025"
 
     const schedules = scheduleMap[dateObj.toLocaleDateString('en-US', { weekday: 'long' })] || [];
+    console.log(`Schedules for ${dateObj.toLocaleDateString('en-US', { weekday: 'long' })}:`, schedules);
 
     return (
       <div key={dateStr} className="time-column">
@@ -261,6 +272,8 @@ export default function RecApp({ patientId, patientFirst, patientLast }) {
               {slots.map((hour) => {
                 const hour24 = convertTo24Hour(hour);
                 const isBooked = appointments[dateStr]?.has(hour24);
+                console.log(`Checking if ${dateStr} ${hour24} is booked:`, isBooked);
+                console.log(`Available appointments for ${dateStr}:`, appointments[dateStr]);
                 const isSelected =
                   selected.date === dateStr &&
                   convertTo24Hour(selected.time) === hour24 &&

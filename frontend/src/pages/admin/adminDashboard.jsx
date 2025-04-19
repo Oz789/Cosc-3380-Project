@@ -1,5 +1,6 @@
 import React from "react";
 import { Grid, Card, CardContent, Typography, Button } from "@mui/material";
+import { Link } from "react-router-dom";
 
 const AdminDashboard = () => {
   return (
@@ -56,7 +57,13 @@ const AdminDashboard = () => {
         <Card>
           <CardContent>
             <Typography variant="h6">Reports</Typography>
-            <Button variant="outlined" fullWidth sx={{ mt: 1 }}>
+            <Button 
+              component={Link}
+              to="/admin/reports"
+              variant="outlined" 
+              fullWidth 
+              sx={{ mt: 1 }}
+            >
               Generate/View Reports
             </Button>
           </CardContent>

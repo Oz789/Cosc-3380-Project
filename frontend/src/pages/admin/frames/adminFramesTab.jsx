@@ -25,7 +25,7 @@ const AdminFramesTab = () => {
 
   const fetchFrames = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/frames"); //fix this 
+      const res = await axios.get("http://localhost:5001/api/frames");
       setFrames(res.data);
     } catch (error) {
       console.error("Failed to fetch frames", error);
@@ -49,12 +49,24 @@ const AdminFramesTab = () => {
   const handleCreate = async (newFrame) => {
     try {
       await axios.post("http://localhost:5001/api/createFrame", newFrame);
-        setModal(false); 
+      setModal(false); 
       fetchFrames(); 
-        console.log("Adding new frame:", newFrame);
-
     } catch (error) {
       console.error("Error creating frame:", error);
+    }
+  };
+
+  const handleEdit = async (updatedFrame) => {
+    try {
+      await axios.patch(`http://localhost:5001/api/frames/${updatedFrame.frameID}`, updatedFrame);
+      setFrames(prevFrames => 
+        prevFrames.map(frame => 
+          frame.frameID === updatedFrame.frameID ? updatedFrame : frame
+        )
+      );
+      setViewModal(false);
+    } catch (error) {
+      console.error("Error updating frame:", error);
     }
   };
 
@@ -63,7 +75,6 @@ const AdminFramesTab = () => {
       await axios.delete(`http://localhost:5001/api/frames/${id}`);
       setViewModal(false);       
       fetchFrames();               
-      console.log("Deleted frame ID:", id);
     } catch (error) {
       console.error("Error deleting frame:", error);
     }
@@ -71,47 +82,46 @@ const AdminFramesTab = () => {
 
   return (
     <div>
-      
       <Grid2 sx={{ paddingLeft: 4, paddingTop: 2 }}>
-      <div>
-  <Typography
-    variant="subtitle1"
-    sx={{
-      fontFamily: "Serif",
-      fontSize: "20px",
-      textAlign: "center",
-      flexGrow: 1
-    }}
-  >
-    Showing {frames.length} Products
-  </Typography>
-  </div>
-        
+        <div>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontFamily: "Serif",
+              fontSize: "20px",
+              textAlign: "center",
+              flexGrow: 1
+            }}
+          >
+            Showing {frames.length} Products
+          </Typography>
+        </div>
 
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <Button
-      variant="contained"
-      color="primary"
-      onClick={() => setModal(true)}
-      sx={{
-        minWidth: 0,
-        width: 48,
-        height: 48,
-        borderRadius: "50%",
-        fontSize: "1.5rem",
-        fontWeight: "bold",
-        lineHeight: 1,
-        boxShadow: 2,
-      }}
-    >
-      +
-    </Button>
-    <Typography
-      variant="subtitle1"
-      sx={{ fontFamily: "Bell MT, serif", fontWeight: 500 }}
-    >Add a Frame
-    </Typography>
-  </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setModal(true)}
+            sx={{
+              minWidth: 0,
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              lineHeight: 1,
+              boxShadow: 2,
+            }}
+          >
+            +
+          </Button>
+          <Typography
+            variant="subtitle1"
+            sx={{ fontFamily: "Bell MT, serif", fontWeight: 500 }}
+          >
+            Add a Frame
+          </Typography>
+        </Box>
       </Grid2>
 
       <Grid2
@@ -120,29 +130,29 @@ const AdminFramesTab = () => {
         justifyContent="center"
         sx={{ padding: 2 }}
       >
-  {frames.map((frame) => (
-    <Grid2 item key={frame.id}>
-      <Card className="admin-frame-card">
-        <CardActionArea onClick={() => handleFramesClick(frame)}>
-          <CardMedia
-            component="img"
-            image="/Images/brevik.webp"
-            alt="Eyeglass"
-            className="admin-frame-image"
-          />
-          <div className="admin-frame-details">
-            <Typography variant="h6" fontFamily="Roboto">
-              {frame.name}
-            </Typography>
-            <Typography variant="h6" fontWeight="bold">
-              {parseFloat(frame.price).toFixed(2)} 
-            </Typography>
-          </div>
-        </CardActionArea>
-      </Card>
-    </Grid2>
-  ))}
-</Grid2>
+        {frames.map((frame) => (
+          <Grid2 item key={frame.frameID}>
+            <Card className="admin-frame-card">
+              <CardActionArea onClick={() => handleFramesClick(frame)}>
+                <CardMedia
+                  component="img"
+                  image="/Images/brevik.webp"
+                  alt="Eyeglass"
+                  className="admin-frame-image"
+                />
+                <div className="admin-frame-details">
+                  <Typography variant="h6" fontFamily="Roboto">
+                    {frame.name}
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                    ${parseFloat(frame.price).toFixed(2)}
+                  </Typography>
+                </div>
+              </CardActionArea>
+            </Card>
+          </Grid2>
+        ))}
+      </Grid2>
 
       {modal && (
         <AdminFrameModal
@@ -151,16 +161,14 @@ const AdminFramesTab = () => {
         />
       )}
 
-
       {viewModal && selectedFrame && (
-    <AdminEditFrameModal
-    data={selectedFrame}
-    onClose={() => setViewModal(false)}
-    onEdit={() => console.log("Edit", selectedFrame.frameID)}
-    onDelete={handleDelete}
-  />
-)}
-
+        <AdminEditFrameModal
+          data={selectedFrame}
+          onClose={() => setViewModal(false)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 };
